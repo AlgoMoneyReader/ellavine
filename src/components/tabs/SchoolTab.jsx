@@ -215,29 +215,34 @@ export default function SchoolTab() {
       {/* ── 구 선택 ────────────────────────────────────────────────── */}
       <div style={{
         background:'#fff', border:'1px solid var(--border)',
-        borderRadius:12, padding:'12px 14px', marginBottom:16,
+        borderRadius:12, padding:'14px 16px', marginBottom:16,
         boxShadow:'0 2px 8px rgba(0,0,0,0.05)',
       }}>
-        <div style={{ fontSize:11, color:'var(--gray)', marginBottom:8, fontWeight:600 }}>
-          자치구 선택 · {selectedGu} {isGangseo ? '🏠' : ''}
+        <div style={{ fontSize:11, color:'var(--gray)', marginBottom:10, fontWeight:600, letterSpacing:'0.3px' }}>
+          자치구 선택
         </div>
-        <div style={{
-          display:'flex', flexWrap:'wrap', gap:6,
-          maxHeight:110, overflowY:'auto',
-        }}>
-          {GU_LIST.map(gu => (
-            <button key={gu} onClick={() => setSelectedGu(gu)} style={{
-              padding:'5px 11px', borderRadius:20, fontSize:12,
-              border: `1.5px solid ${selectedGu===gu ? 'var(--navy)' : 'var(--border)'}`,
-              background: selectedGu===gu ? 'var(--navy)' : '#fff',
-              color: selectedGu===gu ? '#fff' : 'var(--text)',
-              fontWeight: selectedGu===gu ? 700 : 400,
-              cursor:'pointer', transition:'all 0.15s',
-              flexShrink: 0,
-            }}>
-              {gu === '강서구' ? '🏠 강서구' : gu}
-            </button>
-          ))}
+        <div style={{ position:'relative' }}>
+          <select
+            value={selectedGu}
+            onChange={e => setSelectedGu(e.target.value)}
+            style={{
+              width:'100%', padding:'11px 40px 11px 14px',
+              borderRadius:10, border:'1.5px solid var(--border)',
+              background:'#fff', fontSize:16, fontWeight:700,
+              color:'var(--navy)', appearance:'none', WebkitAppearance:'none',
+              cursor:'pointer', outline:'none', transition:'border-color 0.15s',
+            }}
+            onFocus={e => e.target.style.borderColor='var(--navy)'}
+            onBlur={e  => e.target.style.borderColor='var(--border)'}
+          >
+            {GU_LIST.map(gu => (
+              <option key={gu} value={gu}>{gu === '강서구' ? '🏠 강서구' : gu}</option>
+            ))}
+          </select>
+          <span style={{
+            position:'absolute', right:14, top:'50%', transform:'translateY(-50%)',
+            pointerEvents:'none', fontSize:11, color:'var(--gray)',
+          }}>▼</span>
         </div>
       </div>
 
