@@ -93,7 +93,6 @@ export const SEOUL_SCHOOLS = {
 
   송파구: [
     { name:'잠실중학교',       graduates:285, science:2, foreign:14, private:17, gifted:1, type:'공립' },
-    { name:'잠일중학교',       graduates:288, science:2, foreign:15, private:18, gifted:1, type:'공립' },
     { name:'신천중학교',       graduates:265, science:1, foreign:12, private:14, gifted:1, type:'공립' },
     { name:'풍납중학교',       graduates:262, science:1, foreign:13, private:14, gifted:0, type:'공립' },
     { name:'가락중학교',       graduates:275, science:1, foreign:11, private:13, gifted:0, type:'공립' },
@@ -106,7 +105,6 @@ export const SEOUL_SCHOOLS = {
     { name:'오금중학교',       graduates:232, science:0, foreign:6,  private:7,  gifted:0, type:'공립' },
     { name:'마천중학교',       graduates:215, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
     { name:'장지중학교',       graduates:208, science:0, foreign:4,  private:5,  gifted:0, type:'공립' },
-    { name:'성내중학교',       graduates:222, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
     { name:'배재중학교',       graduates:215, science:0, foreign:4,  private:5,  gifted:0, type:'사립' },
     { name:'한산중학교',       graduates:208, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
   ],
@@ -120,7 +118,6 @@ export const SEOUL_SCHOOLS = {
     { name:'용화여자중학교',   graduates:228, science:0, foreign:7,  private:7,  gifted:0, type:'공립' },
     { name:'월계중학교',       graduates:242, science:0, foreign:6,  private:6,  gifted:0, type:'공립' },
     { name:'광운중학교',       graduates:238, science:0, foreign:6,  private:6,  gifted:0, type:'공립' },
-    { name:'을지중학교',       graduates:235, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
     { name:'용암중학교',       graduates:230, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
     { name:'마들중학교',       graduates:215, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
     { name:'노원중학교',       graduates:225, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
@@ -232,7 +229,6 @@ export const SEOUL_SCHOOLS = {
     { name:'신당중학교',       graduates:175, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
     { name:'장충중학교',       graduates:168, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
     { name:'흥인중학교',       graduates:162, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
-    { name:'동대문중학교',     graduates:158, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
     { name:'중구중학교',       graduates:148, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
   ],
 
@@ -383,7 +379,6 @@ export const SEOUL_SCHOOLS = {
     { name:'덕원중학교',     graduates:163, science:0, foreign:1,  private:1,  gifted:0, type:'공립', magok:false },
     { name:'화곡중학교',     graduates:187, science:0, foreign:1,  private:1,  gifted:0, type:'공립', magok:false },
     { name:'화원중학교',     graduates:170, science:0, foreign:1,  private:1,  gifted:0, type:'공립', magok:false },
-    { name:'마포중학교',     graduates:148, science:0, foreign:1,  private:1,  gifted:0, type:'사립', magok:false },
     { name:'신정여자중학교', graduates:118, science:0, foreign:1,  private:0,  gifted:0, type:'사립', magok:false },
   ],
 };
