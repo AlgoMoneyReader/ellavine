@@ -235,7 +235,7 @@ export default function SchoolTab() {
             onFocus={e => e.target.style.borderColor='var(--navy)'}
             onBlur={e  => e.target.style.borderColor='var(--border)'}
           >
-            {GU_LIST.map(gu => (
+            {[...GU_LIST].sort((a, b) => a.localeCompare(b, 'ko')).map(gu => (
               <option key={gu} value={gu}>{gu === '강서구' ? '🏠 강서구' : gu}</option>
             ))}
           </select>
