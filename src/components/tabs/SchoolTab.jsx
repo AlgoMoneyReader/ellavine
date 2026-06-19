@@ -91,6 +91,8 @@ export default function SchoolTab() {
     }
     if (window.kakao?.maps?.services) { onSdkReady(); return; }
 
+    if (!KAKAO_JS_KEY) { setMapReady(true); return; }
+
     const existing = document.querySelector('script[src*="dapi.kakao.com"]');
     if (existing) {
       existing.addEventListener('load', () =>
@@ -103,6 +105,10 @@ export default function SchoolTab() {
     script.onload = () => window.kakao.maps.load(onSdkReady);
     script.onerror = () => setMapReady(true);
     document.head.appendChild(script);
+
+    // 10초 후에도 로드 안 되면 강제로 ready 처리
+    const timer = setTimeout(() => setMapReady(true), 10000);
+    return () => clearTimeout(timer);
   }, []);
 
   // 구 변경 시 geocode + 지도 중심 이동
@@ -293,6 +299,13 @@ export default function SchoolTab() {
             {!mapReady && (
               <div style={{ height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--gray)', fontSize:13 }}>
                 지도 로딩 중…
+              </div>
+            )}
+            {mapReady && !window.kakao?.maps && (
+              <div style={{ height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'var(--gray)', gap:8 }}>
+                <span style={{ fontSize:28 }}>🗺️</span>
+                <span style={{ fontSize:13, fontWeight:600 }}>지도를 불러올 수 없습니다</span>
+                <span style={{ fontSize:11 }}>Vercel에 VITE_KAKAO_JS_KEY 환경변수를 등록해주세요</span>
               </div>
             )}
           </div>
