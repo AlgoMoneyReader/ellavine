@@ -199,7 +199,7 @@ export default function SchoolTab() {
   const selRate  = selected ? getRate(selected)  : 0;
 
   return (
-    <div style={{ padding:'16px 16px 120px', maxWidth:760, margin:'0 auto' }}>
+    <div style={{ padding:'16px 16px 120px', maxWidth:760, margin:'0 auto', wordBreak:'keep-all' }}>
 
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div style={{
