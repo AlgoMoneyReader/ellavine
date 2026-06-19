@@ -446,6 +446,7 @@ export default function SchoolTab() {
                       {s.magok && <span style={{ marginLeft:5, fontSize:9, background:'var(--navy)', color:'#C8A840', borderRadius:4, padding:'1px 5px', fontWeight:700, verticalAlign:'middle' }}>마곡동</span>}
                       {s.type==='사립' && <span style={{ marginLeft:4, fontSize:9, background:'#f0f0f0', color:'#666', borderRadius:4, padding:'1px 5px', verticalAlign:'middle' }}>사립</span>}
                       {s.note && <span style={{ marginLeft:4, fontSize:9, background:'#e8f5e9', color:'#2e7d32', borderRadius:4, padding:'1px 5px', verticalAlign:'middle' }}>{s.note}</span>}
+                      {s.verified && <span style={{ marginLeft:4, fontSize:9, color:'#1565c0', verticalAlign:'middle' }} title="학교알리미 공시 확인">★</span>}
                     </td>
                     <td style={{ padding:'10px 10px', textAlign:'center' }}>
                       <span style={{ fontWeight:700, fontSize:13, color:rate>=10?'#8b0000':rate>=6?'#c0392b':rate>=3?'#e67e22':'var(--gray)' }}>
@@ -507,8 +508,11 @@ export default function SchoolTab() {
           })}
         </div>
 
-        <div style={{ padding:'10px 16px', borderTop:'1px solid var(--border)', fontSize:11, color:'var(--gray)', background:'#fafafa' }}>
-          * 2025학년도 졸업생 기준 (2026년 공시) · 학교알리미 기반 추정치 포함 · 마커 위치는 카카오맵 자동 조회
+        <div style={{ padding:'10px 16px', borderTop:'1px solid var(--border)', fontSize:11, color:'var(--gray)', background:'#fafafa', lineHeight:1.7 }}>
+          {isGangseo
+            ? '★ 강서구: 2024년 학교알리미 공시 기준 (2023학년도 졸업생) — 출처: 학교알리미·blog.allinfo.today | ☆ 추정치 포함'
+            : '☆ 학교알리미 참고 추정치 — 실제 공시와 다를 수 있음 · 마커 위치는 카카오맵 자동 조회'
+          }
         </div>
       </div>
 
