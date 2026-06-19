@@ -1,0 +1,14 @@
+{
+  "alias": ["elravine.vercel.app"],
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/" }],
+  "crons": [
+    {
+      "path": "/api/cron-realtrade",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron-push",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}

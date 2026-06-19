@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+
+:root {
+  /* 래미안 브랜드 컬러 */
+  --gold: #C8A840;
+  --gold-light: #E4C96A;
+  --gold-dim: rgba(200,168,64,0.22);
+  --navy: #0B2849;
+  --navy-2: #163B5E;
+  --navy-3: #1F507A;
+  --cyan: #008FAF;
+  --red: #D94545;
+  --green: #1A9068;
+
+  /* 화이트톤 라이트 모드 */
+  --bg: #F7F5F0;
+  --card: #FFFFFF;
+  --text: #0B2849;
+  --text-2: #516478;
+  --gray: #7A8FA0;
+  --border: #E5DEC8;
+  --shadow: 0 2px 20px rgba(11,40,73,0.08);
+  --shadow-sm: 0 1px 8px rgba(11,40,73,0.05);
+  --shadow-lg: 0 8px 40px rgba(11,40,73,0.13);
+
+  /* 레거시 호환 */
+  --white: #F7F5F0;
+  --card-bg: #FFFFFF;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root { width: 100%; min-height: 100vh; }
+
+button { cursor: pointer; font-family: inherit; }
+input, select { font-family: inherit; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:0.4; transform:scale(0.8); }
+}
+@keyframes typing {
+  0%,60%,100% { transform:translateY(0); }
+  30%          { transform:translateY(-6px); }
+}
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

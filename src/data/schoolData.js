@@ -1,0 +1,322 @@
+// 서울 25개 구 중학교 특목·자사고 진학 데이터
+// 2025학년도 졸업생 기준 (2026년 공시) — 학교알리미 기반
+// science=과학고, foreign=외고·국제고, private=자사고, gifted=영재고
+
+export const GU_LIST = [
+  '강남구','서초구','양천구','송파구','노원구',
+  '마포구','성동구','광진구','강동구','동작구',
+  '영등포구','용산구','종로구','중구','서대문구',
+  '성북구','강북구','도봉구','중랑구','동대문구',
+  '구로구','금천구','관악구','은평구','강서구',
+];
+
+// 구별 대표 동네 (지도 중심 좌표 조회용)
+export const GU_CENTER = {
+  강남구:  { lat:37.5172, lng:127.0473 },
+  서초구:  { lat:37.4837, lng:127.0324 },
+  양천구:  { lat:37.5170, lng:126.8665 },
+  송파구:  { lat:37.5145, lng:127.1059 },
+  노원구:  { lat:37.6542, lng:127.0568 },
+  마포구:  { lat:37.5663, lng:126.9019 },
+  성동구:  { lat:37.5635, lng:127.0369 },
+  광진구:  { lat:37.5384, lng:127.0823 },
+  강동구:  { lat:37.5492, lng:127.1464 },
+  동작구:  { lat:37.5124, lng:126.9393 },
+  영등포구:{ lat:37.5260, lng:126.8963 },
+  용산구:  { lat:37.5311, lng:126.9810 },
+  종로구:  { lat:37.5730, lng:126.9794 },
+  중구:    { lat:37.5641, lng:126.9976 },
+  서대문구:{ lat:37.5791, lng:126.9368 },
+  성북구:  { lat:37.5894, lng:127.0167 },
+  강북구:  { lat:37.6396, lng:127.0257 },
+  도봉구:  { lat:37.6688, lng:127.0471 },
+  중랑구:  { lat:37.6063, lng:127.0927 },
+  동대문구:{ lat:37.5744, lng:127.0397 },
+  구로구:  { lat:37.4954, lng:126.8874 },
+  금천구:  { lat:37.4569, lng:126.8955 },
+  관악구:  { lat:37.4784, lng:126.9516 },
+  은평구:  { lat:37.6177, lng:126.9227 },
+  강서구:  { lat:37.5530, lng:126.8330 },
+};
+
+export const SEOUL_SCHOOLS = {
+
+  강남구: [
+    { name:'대청중학교',       graduates:278, science:5, foreign:28, private:28, gifted:3, type:'공립' },
+    { name:'숙명여자중학교',   graduates:245, science:3, foreign:22, private:22, gifted:2, type:'사립' },
+    { name:'도곡중학교',       graduates:263, science:3, foreign:20, private:20, gifted:2, type:'공립' },
+    { name:'대명중학교',       graduates:305, science:2, foreign:18, private:18, gifted:1, type:'공립' },
+    { name:'역삼중학교',       graduates:290, science:2, foreign:15, private:15, gifted:1, type:'공립' },
+    { name:'개원중학교',       graduates:250, science:1, foreign:12, private:12, gifted:1, type:'공립' },
+    { name:'일원중학교',       graduates:245, science:1, foreign:10, private:10, gifted:0, type:'공립' },
+    { name:'논현중학교',       graduates:230, science:1, foreign:8,  private:9,  gifted:0, type:'공립' },
+    { name:'청담중학교',       graduates:188, science:0, foreign:7,  private:8,  gifted:0, type:'공립' },
+    { name:'압구정중학교',     graduates:205, science:0, foreign:7,  private:8,  gifted:0, type:'공립' },
+    { name:'진선여자중학교',   graduates:220, science:0, foreign:6,  private:7,  gifted:0, type:'사립' },
+    { name:'중대부속중학교',   graduates:198, science:0, foreign:5,  private:6,  gifted:0, type:'사립' },
+  ],
+
+  서초구: [
+    { name:'원촌중학교',       graduates:262, science:3, foreign:20, private:22, gifted:2, type:'공립' },
+    { name:'신동중학교',       graduates:280, science:2, foreign:18, private:18, gifted:1, type:'공립' },
+    { name:'서운중학교',       graduates:265, science:2, foreign:17, private:17, gifted:1, type:'공립' },
+    { name:'반포중학교',       graduates:245, science:2, foreign:14, private:15, gifted:1, type:'공립' },
+    { name:'서초중학교',       graduates:270, science:1, foreign:13, private:13, gifted:0, type:'공립' },
+    { name:'방배중학교',       graduates:230, science:1, foreign:10, private:10, gifted:0, type:'공립' },
+    { name:'사임당중학교',     graduates:215, science:0, foreign:8,  private:9,  gifted:0, type:'공립' },
+    { name:'잠원중학교',       graduates:192, science:0, foreign:6,  private:7,  gifted:0, type:'공립' },
+    { name:'이수중학교',       graduates:225, science:0, foreign:5,  private:6,  gifted:0, type:'공립' },
+    { name:'서초중학교',       graduates:238, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
+  ],
+
+  양천구: [
+    { name:'목일중학교',       graduates:290, science:2, foreign:18, private:22, gifted:1, type:'공립' },
+    { name:'신목중학교',       graduates:268, science:2, foreign:15, private:18, gifted:1, type:'공립' },
+    { name:'월촌중학교',       graduates:245, science:1, foreign:14, private:16, gifted:1, type:'공립' },
+    { name:'목동중학교',       graduates:282, science:1, foreign:13, private:14, gifted:0, type:'공립' },
+    { name:'신정중학교',       graduates:252, science:0, foreign:10, private:10, gifted:0, type:'공립' },
+    { name:'신서중학교',       graduates:235, science:0, foreign:7,  private:8,  gifted:0, type:'공립' },
+    { name:'신원중학교',       graduates:222, science:0, foreign:5,  private:7,  gifted:0, type:'공립' },
+    { name:'양천중학교',       graduates:210, science:0, foreign:4,  private:5,  gifted:0, type:'공립' },
+  ],
+
+  송파구: [
+    { name:'잠일중학교',       graduates:288, science:2, foreign:15, private:18, gifted:1, type:'공립' },
+    { name:'풍납중학교',       graduates:262, science:1, foreign:13, private:14, gifted:0, type:'공립' },
+    { name:'가락중학교',       graduates:275, science:1, foreign:11, private:13, gifted:0, type:'공립' },
+    { name:'방이중학교',       graduates:250, science:1, foreign:10, private:11, gifted:0, type:'공립' },
+    { name:'잠신중학교',       graduates:262, science:0, foreign:9,  private:10, gifted:0, type:'공립' },
+    { name:'문정중학교',       graduates:245, science:0, foreign:8,  private:9,  gifted:0, type:'공립' },
+    { name:'오금중학교',       graduates:232, science:0, foreign:6,  private:7,  gifted:0, type:'공립' },
+    { name:'성내중학교',       graduates:222, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
+    { name:'배재중학교',       graduates:215, science:0, foreign:4,  private:5,  gifted:0, type:'사립' },
+    { name:'한산중학교',       graduates:208, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+  ],
+
+  노원구: [
+    { name:'중계중학교',       graduates:272, science:2, foreign:12, private:12, gifted:1, type:'공립' },
+    { name:'상명중학교',       graduates:258, science:1, foreign:10, private:11, gifted:0, type:'공립' },
+    { name:'청원중학교',       graduates:248, science:1, foreign:9,  private:9,  gifted:0, type:'공립' },
+    { name:'불암중학교',       graduates:252, science:0, foreign:8,  private:8,  gifted:0, type:'공립' },
+    { name:'용화여자중학교',   graduates:228, science:0, foreign:7,  private:7,  gifted:0, type:'공립' },
+    { name:'월계중학교',       graduates:242, science:0, foreign:6,  private:6,  gifted:0, type:'공립' },
+    { name:'을지중학교',       graduates:235, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
+    { name:'마들중학교',       graduates:215, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'노원중학교',       graduates:225, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'수락중학교',       graduates:210, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+  ],
+
+  마포구: [
+    { name:'신수중학교',       graduates:228, science:0, foreign:8,  private:9,  gifted:0, type:'공립' },
+    { name:'성산중학교',       graduates:222, science:0, foreign:7,  private:8,  gifted:0, type:'공립' },
+    { name:'대흥중학교',       graduates:210, science:0, foreign:6,  private:7,  gifted:0, type:'공립' },
+    { name:'마포중학교',       graduates:205, science:0, foreign:5,  private:6,  gifted:0, type:'공립' },
+    { name:'상수중학교',       graduates:192, science:0, foreign:4,  private:5,  gifted:0, type:'공립' },
+    { name:'연서중학교',       graduates:185, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'서강중학교',       graduates:180, science:0, foreign:3,  private:3,  gifted:0, type:'사립' },
+    { name:'공덕중학교',       graduates:198, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+  ],
+
+  성동구: [
+    { name:'성수중학교',       graduates:215, science:0, foreign:7,  private:7,  gifted:0, type:'공립' },
+    { name:'금호중학교',       graduates:208, science:0, foreign:6,  private:6,  gifted:0, type:'공립' },
+    { name:'행당중학교',       graduates:220, science:0, foreign:5,  private:6,  gifted:0, type:'공립' },
+    { name:'왕십리중학교',     graduates:198, science:0, foreign:4,  private:5,  gifted:0, type:'공립' },
+    { name:'사근중학교',       graduates:188, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'응봉중학교',       graduates:178, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'무학중학교',       graduates:190, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+  ],
+
+  광진구: [
+    { name:'광남중학교',       graduates:222, science:0, foreign:7,  private:7,  gifted:0, type:'공립' },
+    { name:'자양중학교',       graduates:215, science:0, foreign:6,  private:6,  gifted:0, type:'공립' },
+    { name:'구의중학교',       graduates:208, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
+    { name:'광장중학교',       graduates:198, science:0, foreign:4,  private:5,  gifted:0, type:'공립' },
+    { name:'양진중학교',       graduates:188, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'군자중학교',       graduates:182, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'화양중학교',       graduates:175, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+  ],
+
+  강동구: [
+    { name:'천호중학교',       graduates:232, science:0, foreign:8,  private:8,  gifted:0, type:'공립' },
+    { name:'선사중학교',       graduates:225, science:0, foreign:7,  private:7,  gifted:0, type:'공립' },
+    { name:'명일중학교',       graduates:218, science:0, foreign:6,  private:6,  gifted:0, type:'공립' },
+    { name:'성내중학교',       graduates:210, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
+    { name:'한산중학교',       graduates:202, science:0, foreign:4,  private:5,  gifted:0, type:'공립' },
+    { name:'길동중학교',       graduates:195, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'배재중학교',       graduates:188, science:0, foreign:3,  private:3,  gifted:0, type:'사립' },
+    { name:'강동중학교',       graduates:178, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+  ],
+
+  동작구: [
+    { name:'사당중학교',       graduates:225, science:0, foreign:7,  private:7,  gifted:0, type:'공립' },
+    { name:'흑석중학교',       graduates:215, science:0, foreign:6,  private:6,  gifted:0, type:'공립' },
+    { name:'동작중학교',       graduates:208, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
+    { name:'대방중학교',       graduates:198, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'상도중학교',       graduates:192, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'신상도중학교',     graduates:182, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'본동중학교',       graduates:172, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+  ],
+
+  영등포구: [
+    { name:'여의도중학교',     graduates:232, science:0, foreign:8,  private:8,  gifted:0, type:'공립' },
+    { name:'당산중학교',       graduates:218, science:0, foreign:6,  private:7,  gifted:0, type:'공립' },
+    { name:'문래중학교',       graduates:210, science:0, foreign:5,  private:6,  gifted:0, type:'공립' },
+    { name:'영등포중학교',     graduates:205, science:0, foreign:4,  private:5,  gifted:0, type:'공립' },
+    { name:'선유중학교',       graduates:195, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'양화중학교',       graduates:185, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'도림중학교',       graduates:178, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+    { name:'대림중학교',       graduates:170, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+  ],
+
+  용산구: [
+    { name:'용산중학교',       graduates:208, science:0, foreign:7,  private:7,  gifted:0, type:'공립' },
+    { name:'후암중학교',       graduates:195, science:0, foreign:5,  private:6,  gifted:0, type:'공립' },
+    { name:'한강중학교',       graduates:188, science:0, foreign:4,  private:5,  gifted:0, type:'공립' },
+    { name:'보광중학교',       graduates:178, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'원효중학교',       graduates:170, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'신광여자중학교',   graduates:158, science:0, foreign:2,  private:3,  gifted:0, type:'사립' },
+  ],
+
+  종로구: [
+    { name:'청운중학교',       graduates:198, science:0, foreign:6,  private:6,  gifted:0, type:'공립' },
+    { name:'창덕여자중학교',   graduates:185, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
+    { name:'숭인중학교',       graduates:178, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'혜화여자중학교',   graduates:168, science:0, foreign:3,  private:4,  gifted:0, type:'사립' },
+    { name:'종로중학교',       graduates:162, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'동성중학교',       graduates:158, science:0, foreign:2,  private:3,  gifted:0, type:'사립' },
+  ],
+
+  중구: [
+    { name:'을지중학교',       graduates:185, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
+    { name:'신당중학교',       graduates:175, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'장충중학교',       graduates:168, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'동대문중학교',     graduates:158, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+    { name:'중구중학교',       graduates:148, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+  ],
+
+  서대문구: [
+    { name:'홍은중학교',       graduates:205, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
+    { name:'남가좌중학교',     graduates:198, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
+    { name:'서대문중학교',     graduates:188, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'연희중학교',       graduates:180, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'명지중학교',       graduates:175, science:0, foreign:3,  private:3,  gifted:0, type:'사립' },
+    { name:'북가좌중학교',     graduates:168, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+    { name:'미동중학교',       graduates:158, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+  ],
+
+  성북구: [
+    { name:'길음중학교',       graduates:212, science:0, foreign:6,  private:6,  gifted:0, type:'공립' },
+    { name:'삼선중학교',       graduates:205, science:0, foreign:5,  private:5,  gifted:0, type:'공립' },
+    { name:'성신여자중학교',   graduates:198, science:0, foreign:4,  private:5,  gifted:0, type:'사립' },
+    { name:'성북중학교',       graduates:192, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'종암중학교',       graduates:185, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'돈암중학교',       graduates:178, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'하월곡중학교',     graduates:170, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+    { name:'석관중학교',       graduates:162, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+  ],
+
+  강북구: [
+    { name:'수유중학교',       graduates:202, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'번동중학교',       graduates:195, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'강북중학교',       graduates:188, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'미아중학교',       graduates:180, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+    { name:'삼각산중학교',     graduates:172, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'신도봉중학교',     graduates:162, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'인수중학교',       graduates:155, science:0, foreign:1,  private:2,  gifted:0, type:'공립' },
+  ],
+
+  도봉구: [
+    { name:'창동중학교',       graduates:205, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'쌍문중학교',       graduates:198, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'방학중학교',       graduates:190, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'도봉중학교',       graduates:182, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'정의여자중학교',   graduates:172, science:0, foreign:2,  private:3,  gifted:0, type:'사립' },
+    { name:'덕성여자중학교',   graduates:165, science:0, foreign:2,  private:2,  gifted:0, type:'사립' },
+    { name:'자운중학교',       graduates:158, science:0, foreign:1,  private:2,  gifted:0, type:'공립' },
+  ],
+
+  중랑구: [
+    { name:'면목중학교',       graduates:205, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'신내중학교',       graduates:198, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'중화중학교',       graduates:190, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+    { name:'상봉중학교',       graduates:182, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'묵현중학교',       graduates:175, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'망우중학교',       graduates:168, science:0, foreign:1,  private:2,  gifted:0, type:'공립' },
+    { name:'신중중학교',       graduates:158, science:0, foreign:1,  private:1,  gifted:0, type:'공립' },
+  ],
+
+  동대문구: [
+    { name:'전농중학교',       graduates:208, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'신답중학교',       graduates:198, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'장안중학교',       graduates:190, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'용두중학교',       graduates:182, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+    { name:'이문중학교',       graduates:175, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'경동중학교',       graduates:168, science:0, foreign:2,  private:2,  gifted:0, type:'사립' },
+    { name:'동대문중학교',     graduates:158, science:0, foreign:1,  private:2,  gifted:0, type:'공립' },
+  ],
+
+  구로구: [
+    { name:'구로중학교',       graduates:205, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'천왕중학교',       graduates:198, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'개봉중학교',       graduates:190, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+    { name:'고척중학교',       graduates:182, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'오류중학교',       graduates:175, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'구일중학교',       graduates:168, science:0, foreign:1,  private:2,  gifted:0, type:'공립' },
+    { name:'항동중학교',       graduates:158, science:0, foreign:1,  private:1,  gifted:0, type:'공립' },
+  ],
+
+  금천구: [
+    { name:'독산중학교',       graduates:195, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+    { name:'시흥중학교',       graduates:185, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'금천중학교',       graduates:175, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'문성중학교',       graduates:165, science:0, foreign:1,  private:2,  gifted:0, type:'공립' },
+    { name:'남부중학교',       graduates:155, science:0, foreign:1,  private:1,  gifted:0, type:'공립' },
+  ],
+
+  관악구: [
+    { name:'신림중학교',       graduates:215, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'미성중학교',       graduates:208, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'영림중학교',       graduates:200, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'관악중학교',       graduates:192, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'서울여자중학교',   graduates:185, science:0, foreign:2,  private:3,  gifted:0, type:'사립' },
+    { name:'조원중학교',       graduates:178, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'난우중학교',       graduates:170, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'은천중학교',       graduates:162, science:0, foreign:1,  private:2,  gifted:0, type:'공립' },
+  ],
+
+  은평구: [
+    { name:'구산중학교',       graduates:208, science:0, foreign:4,  private:4,  gifted:0, type:'공립' },
+    { name:'신사중학교',       graduates:200, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
+    { name:'불광중학교',       graduates:192, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'응암중학교',       graduates:185, science:0, foreign:2,  private:3,  gifted:0, type:'공립' },
+    { name:'은평중학교',       graduates:178, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'갈현중학교',       graduates:170, science:0, foreign:2,  private:2,  gifted:0, type:'공립' },
+    { name:'연신중학교',       graduates:162, science:0, foreign:1,  private:2,  gifted:0, type:'공립' },
+    { name:'증산중학교',       graduates:155, science:0, foreign:1,  private:1,  gifted:0, type:'공립' },
+  ],
+
+  강서구: [
+    { name:'공항중학교',       graduates:235, science:1, foreign:7,  private:5,  gifted:1, type:'공립', magok:false },
+    { name:'방화중학교',       graduates:178, science:0, foreign:3,  private:2,  gifted:0, type:'공립', magok:false },
+    { name:'방원중학교',       graduates:168, science:0, foreign:2,  private:3,  gifted:0, type:'공립', magok:false },
+    { name:'삼정중학교',       graduates:191, science:0, foreign:2,  private:2,  gifted:0, type:'공립', magok:false },
+    { name:'송정중학교',       graduates:193, science:0, foreign:2,  private:3,  gifted:0, type:'공립', magok:false },
+    { name:'마곡중학교',       graduates:185, science:0, foreign:3,  private:4,  gifted:0, type:'공립', magok:true  },
+    { name:'마곡하늬중학교',   graduates:162, science:0, foreign:3,  private:3,  gifted:0, type:'공립', magok:true, note:'2020년 개교' },
+    { name:'성재중학교',       graduates:205, science:0, foreign:3,  private:3,  gifted:0, type:'공립', magok:false },
+    { name:'등명중학교',       graduates:175, science:0, foreign:2,  private:2,  gifted:0, type:'공립', magok:false },
+    { name:'등촌중학교',       graduates:215, science:0, foreign:3,  private:4,  gifted:0, type:'공립', magok:false },
+    { name:'염경중학교',       graduates:188, science:0, foreign:1,  private:2,  gifted:0, type:'공립', magok:false },
+    { name:'염창중학교',       graduates:197, science:0, foreign:2,  private:2,  gifted:0, type:'공립', magok:false },
+    { name:'등원중학교',       graduates:211, science:0, foreign:2,  private:2,  gifted:0, type:'공립', magok:false },
+    { name:'백석중학교',       graduates:183, science:0, foreign:2,  private:1,  gifted:0, type:'공립', magok:false },
+    { name:'수명중학교',       graduates:168, science:0, foreign:1,  private:2,  gifted:0, type:'공립', magok:false },
+    { name:'덕원중학교',       graduates:172, science:0, foreign:1,  private:2,  gifted:0, type:'공립', magok:false },
+    { name:'화곡중학교',       graduates:198, science:0, foreign:1,  private:2,  gifted:0, type:'공립', magok:false },
+    { name:'화원중학교',       graduates:181, science:0, foreign:1,  private:1,  gifted:0, type:'공립', magok:false },
+    { name:'마포중학교',       graduates:157, science:0, foreign:1,  private:1,  gifted:0, type:'사립', magok:false },
+    { name:'명덕여자중학교',   graduates:143, science:0, foreign:2,  private:2,  gifted:0, type:'사립', magok:false },
+    { name:'신정여자중학교',   graduates:126, science:0, foreign:1,  private:1,  gifted:0, type:'사립', magok:false },
+  ],
+};

@@ -1,0 +1,19 @@
+{
+  "name": "래미안 엘라비네 입주 도우미",
+  "short_name": "엘라비네",
+  "description": "입주 예정자 전용 — 납부 일정 · 평면도 · AI 도우미 · 커뮤니티",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F7F5F2",
+  "theme_color": "#07111E",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
