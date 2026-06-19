@@ -139,13 +139,7 @@ export const SEOUL_SCHOOLS = {
     { name:'연서중학교',       graduates:185, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
     { name:'서강중학교',       graduates:180, science:0, foreign:3,  private:3,  gifted:0, type:'사립' },
     { name:'공덕중학교',       graduates:198, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
-    { name:'염리중학교',       graduates:188, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },       graduates:222, science:0, foreign:7,  private:8,  gifted:0, type:'공립' },
-    { name:'대흥중학교',       graduates:210, science:0, foreign:6,  private:7,  gifted:0, type:'공립' },
-    { name:'마포중학교',       graduates:205, science:0, foreign:5,  private:6,  gifted:0, type:'공립' },
-    { name:'상수중학교',       graduates:192, science:0, foreign:4,  private:5,  gifted:0, type:'공립' },
-    { name:'연서중학교',       graduates:185, science:0, foreign:3,  private:4,  gifted:0, type:'공립' },
-    { name:'서강중학교',       graduates:180, science:0, foreign:3,  private:3,  gifted:0, type:'사립' },
-    { name:'공덕중학교',       graduates:198, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
+    { name:'염리중학교',       graduates:188, science:0, foreign:3,  private:3,  gifted:0, type:'공립' },
   ],
 
   성동구: [
