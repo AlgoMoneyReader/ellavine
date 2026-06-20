@@ -1,9 +1,8 @@
 // 서울 25개 구 중학교 특목·자사고 진학 데이터
-// 학교 목록: NEIS 교육정보 개방포털 공식 데이터 (390개교)
-// [강서구] 2024년 학교알리미 공시 기준 (2023학년도 졸업생)
-// [타 구] 졸업생·진학자 수는 추정치 — 실제와 다를 수 있음
+// [강서구] 학교알리미·allinfo.today 집계 기준 (최신 공시 데이터) — verified:true 표기
+// [타 구] 학교알리미 참고 추정치 — 실제와 다를 수 있음
 // science=과학고, foreign=외고·국제고, private=자사고, gifted=영재고
-// verified=true: 학교알리미 공시 확인 데이터
+// verified=true: 학교알리미 공시 확인 / 미표기: 추정치
 
 export const GU_LIST = [
   '강남구','서초구','양천구','송파구','노원구',
@@ -483,29 +482,29 @@ export const SEOUL_SCHOOLS = {
     { name:'충암중학교', graduates:200, science:0, foreign:0, private:0, gifted:0, type:'사립' },
   ],
 
+  // ── 강서구: 학교알리미 최신 공시 기준 — 출처: allinfo.today / asil.kr / 학교알리미 ───
   강서구: [
-    { name:'경서중학교', graduates:200, science:0, foreign:0, private:0, gifted:0, type:'공립', magok:false },
-    { name:'공항중학교', graduates:174, science:0, foreign:4, private:3, gifted:0, type:'공립', magok:false, verified:true },
-    { name:'덕원중학교', graduates:163, science:0, foreign:1, private:1, gifted:0, type:'사립', magok:false },
-    { name:'등명중학교', graduates:204, science:2, foreign:6, private:3, gifted:0, type:'공립', magok:false, verified:true },
-    { name:'등원중학교', graduates:198, science:0, foreign:1, private:1, gifted:0, type:'공립', magok:false },
-    { name:'등촌중학교', graduates:110, science:0, foreign:0, private:8, gifted:0, type:'사립', magok:false, verified:true },
-    { name:'마곡중학교', graduates:213, science:2, foreign:0, private:3, gifted:0, type:'공립', magok:true, verified:true },
-    { name:'마곡하늬중학교', graduates:205, science:0, foreign:2, private:5, gifted:0, type:'공립', magok:true, verified:true, note:'2020년 개교' },
-    { name:'마포중학교', graduates:200, science:0, foreign:0, private:0, gifted:0, type:'사립', magok:false },
-    { name:'명덕여자중학교', graduates:122, science:0, foreign:5, private:0, gifted:0, type:'사립', magok:false, verified:true },
-    { name:'방원중학교', graduates:116, science:0, foreign:2, private:1, gifted:0, type:'공립', magok:false, verified:true },
-    { name:'방화중학교', graduates:165, science:0, foreign:2, private:2, gifted:0, type:'공립', magok:false },
-    { name:'백석중학교', graduates:172, science:0, foreign:1, private:1, gifted:0, type:'공립', magok:false },
-    { name:'삼정중학교', graduates:178, science:0, foreign:1, private:2, gifted:0, type:'공립', magok:false },
-    { name:'성재중학교', graduates:195, science:0, foreign:2, private:2, gifted:0, type:'공립', magok:false },
-    { name:'송정중학교', graduates:182, science:0, foreign:1, private:2, gifted:0, type:'공립', magok:false },
-    { name:'수명중학교', graduates:158, science:0, foreign:1, private:1, gifted:0, type:'공립', magok:false },
-    { name:'신정여자중학교', graduates:118, science:0, foreign:1, private:0, gifted:0, type:'사립', magok:false },
-    { name:'염경중학교', graduates:180, science:0, foreign:1, private:1, gifted:0, type:'공립', magok:false },
-    { name:'염창중학교', graduates:252, science:1, foreign:5, private:10, gifted:0, type:'공립', magok:false, verified:true },
-    { name:'화곡중학교', graduates:187, science:0, foreign:1, private:1, gifted:0, type:'사립', magok:false },
-    { name:'화원중학교', graduates:170, science:0, foreign:1, private:1, gifted:0, type:'공립', magok:false },
+    { name:'염창중학교',     graduates:252, science:1, foreign:5,  private:10, gifted:0, type:'공립', magok:false, verified:true },
+    { name:'등명중학교',     graduates:204, science:2, foreign:6,  private:3,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'등촌중학교',     graduates:110, science:0, foreign:0,  private:8,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'명덕여자중학교', graduates:179, science:0, foreign:8,  private:1,  gifted:0, type:'사립', magok:false, verified:true },
+    { name:'염경중학교',     graduates:183, science:2, foreign:3,  private:4,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'덕원중학교',     graduates:257, science:2, foreign:5,  private:4,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'마포중학교',     graduates:143, science:0, foreign:2,  private:4,  gifted:0, type:'사립', magok:false, verified:true },
+    { name:'공항중학교',     graduates:174, science:0, foreign:4,  private:3,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'화원중학교',     graduates:159, science:0, foreign:5,  private:1,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'성재중학교',     graduates:149, science:0, foreign:3,  private:2,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'마곡하늬중학교', graduates:205, science:0, foreign:2,  private:5,  gifted:0, type:'공립', magok:true,  verified:true, note:'2020년 개교' },
+    { name:'수명중학교',     graduates:203, science:0, foreign:3,  private:3,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'마곡중학교',     graduates:213, science:2, foreign:0,  private:3,  gifted:0, type:'공립', magok:true,  verified:true },
+    { name:'백석중학교',     graduates:187, science:0, foreign:4,  private:1,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'화곡중학교',     graduates:186, science:0, foreign:1,  private:3,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'방원중학교',     graduates:116, science:1, foreign:0,  private:1,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'신정여자중학교', graduates:147, science:0, foreign:1,  private:1,  gifted:0, type:'사립', magok:false, verified:true },
+    { name:'송정중학교',     graduates:69,  science:0, foreign:0,  private:1,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'등원중학교',     graduates:79,  science:0, foreign:0,  private:1,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'방화중학교',     graduates:178, science:0, foreign:0,  private:1,  gifted:0, type:'공립', magok:false, verified:true },
+    { name:'삼정중학교',     graduates:111, science:0, foreign:0,  private:0,  gifted:0, type:'공립', magok:false, verified:true },
   ],
 
 };

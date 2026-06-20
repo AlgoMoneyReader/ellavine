@@ -528,8 +528,8 @@ export default function SchoolTab() {
 
         <div style={{ padding:'10px 16px', borderTop:'1px solid var(--border)', fontSize:11, color:'var(--gray)', background:'#fafafa', lineHeight:1.7 }}>
           {isGangseo
-            ? '★ 강서구: 2024년 학교알리미 공시 기준 (2023학년도 졸업생) — 출처: 학교알리미·blog.allinfo.today | ☆ 추정치 포함'
-            : '☆ 학교알리미 참고 추정치 — 실제 공시와 다를 수 있음 · 마커 위치는 카카오맵 자동 조회'
+            ? '★ 강서구: 학교알리미 최신 공시 기준 — 출처: schoolinfo.go.kr · allinfo.today · asil.kr (전교 verified)'
+            : '☆ 타 구: 학교알리미 참고 추정치 — 실제 공시와 다를 수 있음'
           }
         </div>
       </div>
