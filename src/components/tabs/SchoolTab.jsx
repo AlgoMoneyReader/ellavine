@@ -468,6 +468,7 @@ export default function SchoolTab() {
                     </td>
                     <td style={{ padding:'10px 10px' }}>
                       <span style={{ fontWeight:700 }}>{s.name}</span>
+                      {s.dong && !s.magok && <span style={{ marginLeft:5, fontSize:10, color:'#888', fontWeight:400, verticalAlign:'middle' }}>{s.dong}</span>}
                       {s.magok && <span style={{ marginLeft:5, fontSize:9, background:'var(--navy)', color:'#C8A840', borderRadius:4, padding:'1px 5px', fontWeight:700, verticalAlign:'middle' }}>마곡동</span>}
                       {s.type==='사립' && <span style={{ marginLeft:4, fontSize:9, background:'#f0f0f0', color:'#666', borderRadius:4, padding:'1px 5px', verticalAlign:'middle' }}>사립</span>}
                       {s.note && <span style={{ marginLeft:4, fontSize:9, background:'#e8f5e9', color:'#2e7d32', borderRadius:4, padding:'1px 5px', verticalAlign:'middle' }}>{s.note}</span>}
@@ -514,6 +515,7 @@ export default function SchoolTab() {
                     <span style={{ color:'var(--gray)', fontSize:12, flexShrink:0 }}>{s.rank}위</span>
                   )}
                   <span style={{ fontWeight:700, fontSize:14 }}>{s.name}</span>
+                  {s.dong && !s.magok && <span style={{ fontSize:10, color:'#888', fontWeight:400, flexShrink:0 }}>{s.dong}</span>}
                   {s.magok && <span style={{ fontSize:9, background:'var(--navy)', color:'#C8A840', borderRadius:4, padding:'1px 5px', fontWeight:700, flexShrink:0 }}>마곡동</span>}
                   {s.type==='사립' && <span style={{ fontSize:9, background:'#f0f0f0', color:'#666', borderRadius:4, padding:'1px 5px', flexShrink:0 }}>사립</span>}
                   <span style={{ marginLeft:'auto', fontWeight:800, fontSize:15, color:rate>=10?'#8b0000':rate>=6?'#c0392b':rate>=3?'#e67e22':'var(--gray)', flexShrink:0 }}>
