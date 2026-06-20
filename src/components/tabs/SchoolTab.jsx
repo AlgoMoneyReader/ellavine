@@ -57,8 +57,12 @@ export default function SchoolTab() {
   const center     = GU_CENTER[selectedGu] || { lat:37.5665, lng:126.9780 };
   const isGangseo  = selectedGu === '강서구';
 
-  // 2025학년도 기준: 전 25개 구 asil.kr 실수치 (자사고 미제공)
-  const footerText = `☆ ${selectedGu}: asil.kr 2025학년도 실수치 — 과학고·외고 확인 / 자사고 미제공(0 표시)`;
+  // 자사고 데이터 보유 구 (allinfo.today 2024학년도)
+  const PRIVATE_GU = new Set(['강남구','서초구','양천구','송파구','노원구','강서구']);
+  const hasPrivate = PRIVATE_GU.has(selectedGu);
+  const footerText = hasPrivate
+    ? `★ ${selectedGu}: 졸업생·과학고·외고 asil.kr 2025학년도 / 자사고 allinfo.today 2024학년도`
+    : `☆ ${selectedGu}: asil.kr 2025학년도 실수치 — 과학고·외고 확인 / 자사고 미수집(0 표시)`;
 
   // 구별 좌표 매핑
   const coordMap = geocoded
