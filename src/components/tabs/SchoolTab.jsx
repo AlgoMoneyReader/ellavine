@@ -59,7 +59,11 @@ export default function SchoolTab() {
 
   // 데이터 출처 등급별 구 분류
   const VERIFIED_FULL    = ['강남구','서초구','양천구','송파구','노원구','강서구'];
-  const VERIFIED_PARTIAL = ['마포구','성동구','광진구','강동구','동작구','영등포구'];
+  const VERIFIED_PARTIAL = [
+    '마포구','성동구','광진구','강동구','동작구','영등포구',
+    '용산구','종로구','중구','서대문구','성북구','강북구',
+    '도봉구','중랑구','동대문구','구로구','금천구','관악구','은평구',
+  ];
   const dataGrade = VERIFIED_FULL.includes(selectedGu) ? 'full'
                   : VERIFIED_PARTIAL.includes(selectedGu) ? 'partial'
                   : 'none';
