@@ -57,6 +57,18 @@ export default function SchoolTab() {
   const center     = GU_CENTER[selectedGu] || { lat:37.5665, lng:126.9780 };
   const isGangseo  = selectedGu === '강서구';
 
+  // 데이터 출처 등급별 구 분류
+  const VERIFIED_FULL    = ['강남구','서초구','양천구','송파구','노원구','강서구'];
+  const VERIFIED_PARTIAL = ['마포구','성동구','광진구','강동구','동작구','영등포구'];
+  const dataGrade = VERIFIED_FULL.includes(selectedGu) ? 'full'
+                  : VERIFIED_PARTIAL.includes(selectedGu) ? 'partial'
+                  : 'none';
+  const footerText = dataGrade === 'full'
+    ? `★ ${selectedGu}: 학교알리미 실수치 (allinfo.today·asil.kr 확인) — 과학고·외고·자사고 포함`
+    : dataGrade === 'partial'
+    ? `☆ ${selectedGu}: asil.kr 실수치 — 과학고·외고 확인 / 자사고 데이터 미제공(0 표시)`
+    : `✕ ${selectedGu}: 공개 데이터 미수집 — 진학률 0% 표시는 실제와 다를 수 있음`;
+
   // 구별 좌표 매핑
   const coordMap = geocoded
     ? Object.fromEntries(geocoded.filter(Boolean).map(g => [g.name, { lat: g.lat, lng: g.lng }]))
@@ -468,19 +480,19 @@ export default function SchoolTab() {
                     </td>
                     <td style={{ padding:'10px 10px', textAlign:'center' }}>
                       <span style={{ fontWeight:700, fontSize:13, color:rate>=10?'#8b0000':rate>=6?'#c0392b':rate>=3?'#e67e22':'var(--gray)' }}>
-                        {rate.toFixed(1)}%
+                        {s.graduates > 0 ? `${rate.toFixed(1)}%` : '—'}
                       </span>
                     </td>
                     <td style={{ padding:'10px 10px', textAlign:'center' }}>
-                      <span style={{ fontWeight:800, color:total>0?'var(--navy)':'var(--gray)' }}>{total}명</span>
+                      <span style={{ fontWeight:800, color:total>0?'var(--navy)':'var(--gray)' }}>{s.graduates > 0 ? `${total}명` : '—'}</span>
                     </td>
                     {[s.science, s.foreign, s.private, s.gifted].map((v,idx) => (
                       <td key={idx} style={{ padding:'10px 10px', textAlign:'center', color:v>0?'var(--text)':'var(--gray)' }}>
-                        {v>0?<b>{v}</b>:'–'}
+                        {s.graduates > 0 ? (v>0?<b>{v}</b>:'–') : '—'}
                       </td>
                     ))}
                     <td style={{ padding:'10px 10px', textAlign:'center', color:'var(--gray)', fontSize:12 }}>
-                      {s.graduates.toLocaleString()}
+                      {s.graduates > 0 ? s.graduates.toLocaleString() : '미확인'}
                     </td>
                   </tr>
                 );
@@ -510,11 +522,11 @@ export default function SchoolTab() {
                   {s.magok && <span style={{ fontSize:9, background:'var(--navy)', color:'#C8A840', borderRadius:4, padding:'1px 5px', fontWeight:700, flexShrink:0 }}>마곡동</span>}
                   {s.type==='사립' && <span style={{ fontSize:9, background:'#f0f0f0', color:'#666', borderRadius:4, padding:'1px 5px', flexShrink:0 }}>사립</span>}
                   <span style={{ marginLeft:'auto', fontWeight:800, fontSize:15, color:rate>=10?'#8b0000':rate>=6?'#c0392b':rate>=3?'#e67e22':'var(--gray)', flexShrink:0 }}>
-                    {rate.toFixed(1)}%
+                    {s.graduates > 0 ? `${rate.toFixed(1)}%` : '—'}
                   </span>
                 </div>
                 <div style={{ display:'flex', gap:10, fontSize:11, color:'var(--gray)', flexWrap:'wrap' }}>
-                  <span>특목·자사 <b style={{ color:'var(--navy)' }}>{total}명</b></span>
+                  <span>특목·자사 <b style={{ color:'var(--navy)' }}>{s.graduates > 0 ? `${total}명` : '미확인'}</b></span>
                   {s.science>0 && <span>과학고 {s.science}</span>}
                   {s.foreign>0 && <span>외고·국제고 {s.foreign}</span>}
                   {s.private>0 && <span>자사고 {s.private}</span>}
@@ -527,10 +539,7 @@ export default function SchoolTab() {
         </div>
 
         <div style={{ padding:'10px 16px', borderTop:'1px solid var(--border)', fontSize:11, color:'var(--gray)', background:'#fafafa', lineHeight:1.7 }}>
-          {isGangseo
-            ? '★ 강서구: 학교알리미 최신 공시 기준 — 출처: schoolinfo.go.kr · allinfo.today · asil.kr (전교 verified)'
-            : '☆ 타 구: 학교알리미 참고 추정치 — 실제 공시와 다를 수 있음'
-          }
+          {footerText}
         </div>
       </div>
 
