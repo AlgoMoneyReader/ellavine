@@ -57,21 +57,8 @@ export default function SchoolTab() {
   const center     = GU_CENTER[selectedGu] || { lat:37.5665, lng:126.9780 };
   const isGangseo  = selectedGu === '강서구';
 
-  // 데이터 출처 등급별 구 분류
-  const VERIFIED_FULL    = ['강남구','서초구','양천구','송파구','노원구','강서구'];
-  const VERIFIED_PARTIAL = [
-    '마포구','성동구','광진구','강동구','동작구','영등포구',
-    '용산구','종로구','중구','서대문구','성북구','강북구',
-    '도봉구','중랑구','동대문구','구로구','금천구','관악구','은평구',
-  ];
-  const dataGrade = VERIFIED_FULL.includes(selectedGu) ? 'full'
-                  : VERIFIED_PARTIAL.includes(selectedGu) ? 'partial'
-                  : 'none';
-  const footerText = dataGrade === 'full'
-    ? `★ ${selectedGu}: 학교알리미 실수치 (allinfo.today·asil.kr 확인) — 과학고·외고·자사고 포함`
-    : dataGrade === 'partial'
-    ? `☆ ${selectedGu}: asil.kr 실수치 — 과학고·외고 확인 / 자사고 데이터 미제공(0 표시)`
-    : `✕ ${selectedGu}: 공개 데이터 미수집 — 진학률 0% 표시는 실제와 다를 수 있음`;
+  // 2025학년도 기준: 전 25개 구 asil.kr 실수치 (자사고 미제공)
+  const footerText = `☆ ${selectedGu}: asil.kr 2025학년도 실수치 — 과학고·외고 확인 / 자사고 미제공(0 표시)`;
 
   // 구별 좌표 매핑
   const coordMap = geocoded
