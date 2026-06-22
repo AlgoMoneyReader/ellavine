@@ -245,12 +245,24 @@ function HlGuSection({ allGuLeaders, sizeFilter, fmtPrice, getSizeGroup, cutoffS
 }
 
 function groupByComplex(items) {
+  // 단지명+동 기준으로 그룹핑 (같은 이름이라도 다른 동이면 별도 단지)
   const map = {};
   for (const it of items) {
-    if (!map[it.name]) map[it.name] = [];
-    map[it.name].push(it);
+    const key = `${it.name}||${it.dong || ''}`;
+    if (!map[key]) map[key] = [];
+    map[key].push(it);
   }
-  return Object.entries(map).map(([name, trades]) => ({ name, trades }));
+  // 동일 단지명이 여러 동에 걸쳐 있으면 표시명에 (동) 추가
+  const nameCount = {};
+  for (const key of Object.keys(map)) {
+    const name = key.split('||')[0];
+    nameCount[name] = (nameCount[name] || 0) + 1;
+  }
+  return Object.entries(map).map(([key, trades]) => {
+    const [name, dong] = key.split('||');
+    const displayName = nameCount[name] > 1 && dong ? `${name} (${dong})` : name;
+    return { name: displayName, baseName: name, dong, trades };
+  });
 }
 
 // 최근 1개월 거래 평균가
@@ -680,7 +692,7 @@ export default function RealTradeTab() {
 
     const groups = groupByComplex(items).filter(g => {
       const sizeOk = sizeFilter === '전체' || g.trades.some(t => getSizeGroup(t.area) === sizeFilter);
-      const searchOk = !searchQuery.trim() || g.name.includes(searchQuery.trim());
+      const searchOk = !searchQuery.trim() || g.name.includes(searchQuery.trim()) || (g.baseName && g.baseName.includes(searchQuery.trim()));
       return sizeOk && searchOk;
     });
     return groups.sort((a, b) => {
@@ -1184,7 +1196,7 @@ export default function RealTradeTab() {
                               <div style={{ fontSize:14, fontWeight:700, color:'var(--navy)', marginBottom:2, display:'flex', alignItems:'center', gap:4, flexWrap:'wrap' }}>
                                 {g.name}
                                 {dt?.dong && <span style={{ fontSize:9, padding:'2px 6px', background:'rgba(11,40,73,0.07)', color:'var(--navy)', borderRadius:8, fontWeight:600, border:'1px solid rgba(11,40,73,0.14)' }}>{dt.dong}</span>}
-                                <AptLinks name={g.name} dong={dt?.dong} />
+                                <AptLinks name={g.baseName || g.name} dong={dt?.dong} />
                               </div>
                               <div style={{ fontSize:10, color:'var(--gray)' }}>{formatDate(dt)} 최신 · 총 {ft.length}건</div>
                             </div>
@@ -1788,7 +1800,7 @@ export default function RealTradeTab() {
                           {displayTrade.dong}
                         </span>
                       )}
-                      <AptLinks name={g.name} dong={displayTrade.dong} />
+                      <AptLinks name={g.baseName || g.name} dong={displayTrade.dong} />
                     </div>
                     <div style={{ fontSize:10, color:'var(--gray)' }}>
                       {formatDate(displayTrade)} 최신 · 총 {filteredTrades.length}건
