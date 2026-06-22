@@ -77,12 +77,172 @@ function formatDateShort(it) {
 
 function getSizeGroup(area) {
   const a = parseFloat(area) || 0;
-  if (a < 60) return '20평형';
-  if (a < 95) return '30평형';
-  if (a < 130) return '40평형';
+  if (a < 66) return '20평형';   // 59㎡ → 20평형
+  if (a < 95) return '30평형';   // 84㎡ → 30평형 (95㎡ 미만; 99.5㎡는 40평형)
+  if (a < 135) return '40평형';  // 114㎡ → 40평형
   return '50평+';
 }
 
+
+// ── 서울 신고가 탭 전용: 일별 신고가 건수 섹션 ──────────────────────
+function HlDailySection({ dailyRows, rawHpAll, sizeFilter, fmtPrice, cutoffStr }) {
+  const [open, setOpen] = useState(true);
+  const [expandedDate, setExpandedDate] = useState(null);
+  // cutoffStr 기준 기간 필터 적용
+  const filteredRows = dailyRows.filter(([date]) => date >= cutoffStr);
+  const maxCount = Math.max(...filteredRows.map(([,ts]) => ts.length), 1);
+  const totalDeals = filteredRows.reduce((s,[,ts]) => s+ts.length, 0);
+  return (
+    <div style={{ background:'var(--bg)', border:'1px solid var(--border)', borderRadius:12, padding:'12px 14px', marginBottom:10 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer', marginBottom: open ? 10 : 0 }}
+        onClick={() => setOpen(o => !o)}>
+        <span style={{ fontSize:12, fontWeight:700, color:'var(--text)' }}>
+          📊 일별 신고가 건수
+          <span style={{ fontSize:9, color:'var(--gray)', fontWeight:400, marginLeft:6 }}>
+            신고가 {totalDeals}건 기준 · {sizeFilter !== '전체' ? sizeFilter : '전체 평형'} · 클릭하면 상세
+          </span>
+        </span>
+        <span style={{ fontSize:11, color:'var(--gray)' }}>{open ? '▲' : '▼'}</span>
+      </div>
+      {open && (
+        <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+          {filteredRows.map(([date, trades]) => {
+            const count = trades.length;
+            const isExp = expandedDate === date;
+            return (
+              <div key={date}>
+                <div style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', padding:'2px 0',
+                  borderRadius:5, background: isExp ? 'rgba(11,40,73,0.04)' : 'transparent' }}
+                  onClick={() => setExpandedDate(isExp ? null : date)}>
+                  <span style={{ fontSize:9, color: isExp?'var(--navy)':'var(--gray)', width:60, flexShrink:0, fontWeight: isExp?700:400 }}>{date.slice(5)}</span>
+                  <div style={{ flex:1, background:'#f0f0f0', borderRadius:3, height:10, overflow:'hidden', border:'1px solid var(--border)' }}>
+                    <div style={{ width:`${Math.round((count/maxCount)*100)}%`, background: count===maxCount?'var(--red)':'var(--navy)', height:'100%', borderRadius:3 }} />
+                  </div>
+                  <span style={{ fontSize:10, fontWeight:700, color: count===maxCount?'var(--red)':'var(--text)', width:22, textAlign:'right' }}>{count}</span>
+                  <span style={{ fontSize:9, color:'var(--gray)', width:10 }}>{isExp ? '▲' : '▼'}</span>
+                </div>
+                {isExp && (
+                  <div style={{ margin:'4px 0 6px 64px', background:'rgba(11,40,73,0.03)', border:'1px solid var(--border)', borderRadius:8, overflow:'hidden' }}>
+                    {[...trades].sort((a,b) => b.priceNum - a.priceNum).map((t, i) => {
+                      const a = parseFloat(t.area)||0;
+                      const py = Math.round(a*1.35/3.3);
+                      const dt = `${t.deal_year}.${String(t.deal_month).replace(/^0/,'')}.${String(t.deal_day||'').replace(/^0/,'')}`.replace(/\.$/, '');
+                      return (
+                        <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+                          padding:'7px 12px', borderBottom: i < trades.length-1 ? '1px solid var(--border)' : 'none' }}>
+                          <div>
+                            <div style={{ fontSize:12, fontWeight:700, color:'var(--navy)', marginBottom:1 }}>
+                              {t.apt_name}
+                              <AptLinks name={t.apt_name} dong={t.dong} />
+                              <span style={{ fontSize:9, color:'var(--gray)', fontWeight:400, marginLeft:4 }}>{t.dong}</span>
+                            </div>
+                            <div style={{ fontSize:10, color:'var(--gray)' }}>{py}평({a.toFixed(1)}㎡) · {t.floor}층 · {dt}</div>
+                          </div>
+                          <div style={{ fontSize:14, fontWeight:800, color:'#D94545', flexShrink:0 }}>{fmtPrice(t.priceNum)}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {filteredRows.length === 0 && <div style={{ fontSize:11, color:'var(--gray)', textAlign:'center', padding:'12px 0' }}>해당 기간 데이터 없음</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── 서울 신고가 탭 전용: 구별 신고가 건수 섹션 ──────────────────────
+function HlGuSection({ allGuLeaders, sizeFilter, fmtPrice, getSizeGroup, cutoffStr }) {
+  const [open, setOpen] = useState(true);
+  const [expandedGu, setExpandedGu] = useState(null);
+
+  // cutoffStr 기준으로 topTrades에서 재계산 (기간 필터 연동)
+  const guRows = allGuLeaders.map(g => {
+    const periodTrades = (g.topTrades || []).filter(t => t.report_date >= cutoffStr);
+    const filtered = sizeFilter === '전체' ? periodTrades : periodTrades.filter(t => getSizeGroup(t.area) === sizeFilter);
+    const sizeLeader = sizeFilter !== '전체' && g.leaderBySize?.[sizeFilter]
+      ? { aptName: g.leaderBySize[sizeFilter].aptName, topPriceNum: g.leaderBySize[sizeFilter].priceNum }
+      : { aptName: g.aptName, topPriceNum: g.topPriceNum };
+    return { guName: g.guName, guCode: g.guCode, count: filtered.length, recentFiltered: filtered, ...sizeLeader };
+  }).sort((a, b) => b.topPriceNum - a.topPriceNum); // 신고가 내림차순
+
+  const maxCount = Math.max(...guRows.map(r => r.count), 1);
+
+  return (
+    <div style={{ background:'var(--bg)', border:'1px solid var(--border)', borderRadius:12, padding:'12px 14px', marginBottom:16 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer', marginBottom: open ? 10 : 0 }}
+        onClick={() => setOpen(o => !o)}>
+        <span style={{ fontSize:12, fontWeight:700, color:'var(--text)' }}>
+          🏙️ 구별 신고가 건수
+          <span style={{ fontSize:9, color:'var(--gray)', fontWeight:400, marginLeft:6 }}>
+            신고가 기준 내림차순 · {sizeFilter !== '전체' ? sizeFilter : '전체 평형'} · 클릭하면 상세
+          </span>
+        </span>
+        <span style={{ fontSize:11, color:'var(--gray)' }}>{open ? '▲' : '▼'}</span>
+      </div>
+      {open && (
+        <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+          {guRows.map((row, idx) => {
+            const { guName, guCode, count, recentFiltered, topPriceNum } = row;
+            const isFirst = idx === 0;
+            const isExp = expandedGu === guCode;
+            return (
+              <div key={guCode}>
+                <div style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', padding:'2px 0',
+                  borderRadius:5, background: isExp ? 'rgba(11,40,73,0.04)' : 'transparent' }}
+                  onClick={() => setExpandedGu(isExp ? null : guCode)}>
+                  <span style={{ fontSize:9, color: isFirst?'var(--gold)': isExp?'var(--navy)':'var(--gray)',
+                    width:36, flexShrink:0, fontWeight: isFirst||isExp?700:400,
+                    overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{guName}</span>
+                  <div style={{ flex:1, background:'#f0f0f0', borderRadius:3, height:10, overflow:'hidden', border:'1px solid var(--border)' }}>
+                    <div style={{ width:`${Math.round((count/maxCount)*100)}%`,
+                      background: isFirst?'var(--gold)':'var(--navy)', height:'100%', borderRadius:3 }} />
+                  </div>
+                  <span style={{ fontSize:10, fontWeight:700, color:'var(--text)', width:22, textAlign:'right', flexShrink:0 }}>{count}</span>
+                  <span style={{ fontSize:8, width:64, flexShrink:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+                    color: isFirst?'var(--gold)':'var(--gray)', fontWeight: isFirst?700:400 }}>{fmtPrice(topPriceNum)}</span>
+                  <span style={{ fontSize:9, color:'var(--gray)', width:10 }}>{isExp ? '▲' : '▼'}</span>
+                </div>
+                {isExp && (
+                  <div style={{ margin:'6px 0 8px 0', background:'rgba(11,40,73,0.03)', border:'1px solid var(--border)', borderRadius:8, overflow:'hidden' }}>
+                    <div style={{ padding:'8px 12px', borderBottom:'1px solid var(--border)', fontSize:11, fontWeight:700, color:'var(--navy)' }}>
+                      {guName} 신고가 TOP ({recentFiltered.length}건)
+                    </div>
+                    {recentFiltered.length === 0
+                      ? <div style={{ padding:'12px', fontSize:11, color:'var(--gray)', textAlign:'center' }}>해당 기간 신고가 내역 없음</div>
+                      : [...recentFiltered].sort((a,b) => b.priceNum - a.priceNum).map((t, i) => {
+                          const a2 = parseFloat(t.area)||0;
+                          const py = Math.round(a2*1.35/3.3);
+                          const dt = `${t.deal_year}.${String(t.deal_month).replace(/^0/,'')}.${String(t.deal_day||'').replace(/^0/,'')}`.replace(/\.$/, '');
+                          return (
+                            <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+                              padding:'7px 12px', borderBottom: i < recentFiltered.length-1 ? '1px solid var(--border)' : 'none' }}>
+                              <div>
+                                <div style={{ fontSize:12, fontWeight:700, color:'var(--navy)', marginBottom:1 }}>
+                                  {t.apt_name}
+                                  <AptLinks name={t.apt_name} dong={t.dong} />
+                                  <span style={{ fontSize:9, color:'var(--gray)', fontWeight:400, marginLeft:4 }}>{t.dong}</span>
+                                </div>
+                                <div style={{ fontSize:10, color:'var(--gray)' }}>{py}평({a2.toFixed(1)}㎡) · {t.floor}층 · {dt}</div>
+                              </div>
+                              <div style={{ fontSize:14, fontWeight:800, color:'#D94545', flexShrink:0 }}>{fmtPrice(t.priceNum)}</div>
+                            </div>
+                          );
+                        })
+                    }
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function groupByComplex(items) {
   const map = {};
@@ -368,6 +528,12 @@ export default function RealTradeTab() {
   const [trackOpen, setTrackOpen] = useState(false);
   const [seoulTrackOpen, setSeoulTrackOpen] = useState(false);
 
+  // ── 서울 신고가 & 주요단지 ──
+  const [hlData, setHlData] = useState(null);
+  const [hlLoading, setHlLoading] = useState(false);
+  const [hlPeriod, setHlPeriod] = useState('3m'); // 신고가 탭 전용 기간 (기본 90일)
+  const [hlSelectedGu, setHlSelectedGu] = useState(null); // 구별 상세 선택
+
   // 서울 구별 일별 추적 캐시 { lawd: { data, ts } }
   const [guDailyCache, setGuDailyCache] = useState({});
   const GU_DAILY_TTL = 60 * 1000; // 1분
@@ -474,6 +640,18 @@ export default function RealTradeTab() {
       fetchGuDaily(selectedGuCode);
     }
   }, [subTab, selectedGuCode]);
+
+  // 서울 신고가 탭 진입 시 데이터 로드
+  useEffect(() => {
+    if (subTab !== 'highlights') return;
+    if (hlData) return;
+    setHlLoading(true);
+    fetch('/api/seoul-highlights')
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(json => setHlData(json))
+      .catch(() => setHlData(null))
+      .finally(() => setHlLoading(false));
+  }, [subTab]);
 
   const SIZE_FILTERS = ['전체', '20평형', '30평형', '40평형', '50평+'];
 
@@ -671,17 +849,26 @@ export default function RealTradeTab() {
           </button>
         ))}
       </div>
-      {/* 서울 구별 비교 버튼 (2번째 줄) */}
-      <button
-        style={{ ...seoulTabBtn, ...(subTab === 'seoul' ? seoulTabActive : {}) }}
-        onClick={() => { setSubTab('seoul'); setSearchQuery(''); setSizeFilter('전체'); }}
-      >
-        🏙️ 서울 구별 비교
-        {subTab === 'seoul'
-          ? <span style={{ fontSize:11, marginLeft:6, opacity:0.8 }}>· {SEOUL_GU.find(g => g.code === selectedGuCode)?.name}</span>
-          : <span style={{ fontSize:9, color:'var(--gray)', marginLeft:6 }}>25개 구 실거래가</span>
-        }
-      </button>
+      {/* 서울 탭 (2번째 줄) */}
+      <div style={{ display:'flex', gap:6, marginBottom:6 }}>
+        <button
+          style={{ ...seoulTabBtn, flex:1, ...(subTab === 'seoul' ? seoulTabActive : {}) }}
+          onClick={() => { setSubTab('seoul'); setSearchQuery(''); setSizeFilter('전체'); }}
+        >
+          🏙️ 서울 구별 비교
+          {subTab === 'seoul'
+            ? <span style={{ fontSize:10, marginLeft:5, opacity:0.8 }}>· {SEOUL_GU.find(g => g.code === selectedGuCode)?.name}</span>
+            : <span style={{ fontSize:9, color:'var(--gray)', marginLeft:5 }}>25개 구</span>
+          }
+        </button>
+        <button
+          style={{ ...seoulTabBtn, flex:1, ...(subTab === 'highlights' ? { background:'#D94545', color:'#fff', border:'none' } : {}) }}
+          onClick={() => { setSubTab('highlights'); }}
+        >
+          🔥 서울 신고가
+          <span style={{ fontSize:9, marginLeft:5, opacity:0.75 }}>주요단지</span>
+        </button>
+      </div>
 
       {/* ── 서울 구별 비교 탭 ── */}
       {subTab === 'seoul' && (() => {
@@ -1158,7 +1345,7 @@ export default function RealTradeTab() {
       )}
 
       {/* ── 🔔 토허 신고 추적 (Supabase 기반, 신고일자 기준) ── */}
-      <div style={trackSection}>
+      {subTab !== 'highlights' && <div style={trackSection}>
         <div
           style={{ display:'flex', flexDirection:'column', gap:6, marginBottom: trackOpen ? 10 : 0, cursor:'pointer' }}
           onClick={() => setTrackOpen(o => !o)}
@@ -1321,7 +1508,8 @@ export default function RealTradeTab() {
           </>
         )}
         </>)}
-      </div>
+      </div>}
+      {/* end subTab !== 'highlights' trackSection */}
 
       {/* ── 📈 가격 추이 차트 ── */}
       {!loading && data && viewMode === 'chart' && (
@@ -1365,7 +1553,7 @@ export default function RealTradeTab() {
       )}
 
       {/* ── 통계 배너 ── */}
-      {!loading && data && (
+      {subTab !== 'highlights' && !loading && data && (
         <div style={statsBanner}>
           {/* 오늘 신고 */}
           <div style={statCard}>
@@ -1395,7 +1583,7 @@ export default function RealTradeTab() {
       )}
 
       {/* ── 일별 실거래 신고건수 ── */}
-      {!loading && data && dailyCounts.length > 0 && (
+      {subTab !== 'highlights' && !loading && data && dailyCounts.length > 0 && (
         <div style={dailySection}>
           <div
             style={{ ...dailySectionTitle, marginBottom: dailyOpen ? 10 : 0, cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center' }}
@@ -1435,7 +1623,7 @@ export default function RealTradeTab() {
       )}
 
       {/* ── 단지별 신고건수 ── */}
-      {!loading && data && (
+      {subTab !== 'highlights' && !loading && data && (
         <div style={dailySection}>
           {/* 헤더 (항상 표시) */}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: complexOpen ? 10 : 0 }}>
@@ -1791,6 +1979,405 @@ export default function RealTradeTab() {
       </button>
 
       </>)} {/* end subTab !== 'seoul' */}
+
+      {/* ── 서울 신고가 & 주요단지 탭 ── */}
+      {subTab === 'highlights' && (() => {
+        const allGl = hlData?.guLeaders || [];
+
+        // 기간 필터: hlPeriod (신고가 탭 전용)
+        const hlPeriodDays = hlPeriod === '1m' ? 30 : hlPeriod === '2m' ? 60 : 90;
+        const periodCutoff = new Date();
+        periodCutoff.setDate(periodCutoff.getDate() - hlPeriodDays);
+        const cutoffStr = periodCutoff.toISOString().slice(0, 10);
+
+        // 평형별 신고가 데이터 선택 (highBySize 우선, 없으면 highPrice에서 필터)
+        const rawHp = sizeFilter !== '전체' && hlData?.highBySize?.[sizeFilter]
+          ? hlData.highBySize[sizeFilter]
+          : (hlData?.highPrice || []);
+
+        // 기간 필터만 추가 (평형은 이미 API에서 분류됨)
+        const hp = rawHp
+          .filter(t => !t.report_date || t.report_date >= cutoffStr)
+          .slice(0, 30);
+
+        // 구별 대장: 평형 필터 시 해당 평형의 대장 정보로 교체, 없으면 해당 구 제외
+        const gl = allGl
+          .map(g => {
+            if (sizeFilter === '전체') return g;
+            // 해당 평형 대장이 있으면 해당 정보로 보여줌
+            const lb = g.leaderBySize?.[sizeFilter];
+            if (!lb) return null; // 해당 평형 거래 없는 구는 제외
+            return {
+              ...g,
+              aptName: lb.aptName,
+              topPriceNum: lb.priceNum,
+              topArea: lb.area,
+              topFloor: lb.floor,
+              dong: lb.dong,
+            };
+          })
+          .filter(Boolean);
+
+        // TOP30 카드 탭 → 해당 단지 + 구의 거래 상세
+        const [hlTopSelected, setHlTopSelected] = [
+          hlSelectedGu?.startsWith('TOP_') ? hlSelectedGu : null,
+          (v) => setHlSelectedGu(v),
+        ];
+
+        // 가격 포맷 유틸
+        function fmtPrice(priceNum) {
+          if (!priceNum) return '-';
+          if (priceNum >= 10000) {
+            const e = Math.floor(priceNum / 10000);
+            const m = priceNum % 10000;
+            return m > 0 ? `${e}억 ${m.toLocaleString()}만` : `${e}억`;
+          }
+          return `${priceNum.toLocaleString()}만`;
+        }
+
+        return (
+          <>
+            {/* ── 필터 행 ── */}
+            <div style={{ display:'flex', gap:6, marginBottom:10, flexWrap:'wrap' }}>
+              {/* 평형 */}
+              {SIZE_FILTERS.map(f => (
+                <button key={f}
+                  style={{ ...sizeFilterBtn, flex:'1 1 0', minWidth:52,
+                    ...(sizeFilter === f ? { background:'var(--navy)', color:'#fff', border:'none', fontWeight:700 } : {}) }}
+                  onClick={() => setSizeFilter(f)}
+                >{f}</button>
+              ))}
+            </div>
+            {/* 기간 */}
+            <div style={{ display:'flex', gap:6, marginBottom:14 }}>
+              {[['1m','최근30일'],['2m','최근60일'],['3m','최근90일']].map(([k,label]) => (
+                <button key={k}
+                  style={{ flex:1, padding:'6px 4px', borderRadius:10, fontSize:11, fontWeight:600,
+                    border:'1px solid var(--border)', cursor:'pointer',
+                    background: hlPeriod === k ? '#D94545' : '#fff',
+                    color: hlPeriod === k ? '#fff' : 'var(--gray)',
+                  }}
+                  onClick={() => setHlPeriod(k)}
+                >{label}</button>
+              ))}
+            </div>
+
+            {/* 로딩 */}
+            {hlLoading && (
+              <div style={loadingBox}>
+                <div style={{ fontSize:13, color:'var(--gray)' }}>서울 전역 데이터 불러오는 중...</div>
+              </div>
+            )}
+
+            {!hlLoading && !hlData && (
+              <div style={emptyBox}>서울 신고가 데이터를 불러오지 못했습니다.</div>
+            )}
+
+            {!hlLoading && hlData && (<>
+
+              {/* ── 신고가 탭 전용: 국토부 실거래 추적 / 일별 / 구별 요약 ── */}
+              {(() => {
+                // 현재 평형 필터 기준 신고가 raw 데이터
+                const rawHpAll = sizeFilter !== '전체' && hlData.highBySize?.[sizeFilter]
+                  ? hlData.highBySize[sizeFilter]
+                  : (hlData.highPrice || []);
+                const todayStr2 = new Date().toISOString().slice(0,10);
+                const weekAgo2 = new Date(); weekAgo2.setDate(weekAgo2.getDate()-7);
+                const monthAgo2 = new Date(); monthAgo2.setDate(monthAgo2.getDate()-30);
+                const wStr = weekAgo2.toISOString().slice(0,10);
+                const mStr = monthAgo2.toISOString().slice(0,10);
+
+                // 오늘/1주/1달 신고건수 (guLeaders의 topTrades 합산)
+                const allGuTrades = (hlData.guLeaders || []).flatMap(g =>
+                  (sizeFilter === '전체' ? g.topTrades : (g.topTrades||[]).filter(t => getSizeGroup(t.area) === sizeFilter)) || []
+                );
+                const hlToday = allGuTrades.filter(t => t.report_date === todayStr2).length;
+                const hlWeek  = allGuTrades.filter(t => t.report_date >= wStr).length;
+                const hlMonth = allGuTrades.filter(t => t.report_date >= mStr).length;
+
+                // 일별 신고가 건수 (rawHpAll 기준, 날짜별 trades 맵)
+                const dailyTradesMap = {};
+                rawHpAll.forEach(t => {
+                  if (!t.report_date) return;
+                  if (!dailyTradesMap[t.report_date]) dailyTradesMap[t.report_date] = [];
+                  dailyTradesMap[t.report_date].push(t);
+                });
+                const dailyRows = Object.entries(dailyTradesMap)
+                  .sort((a,b) => b[0].localeCompare(a[0]))
+                  .slice(0, 30);
+                const maxDailyHl = Math.max(...dailyRows.map(([,ts]) => ts.length), 1);
+
+                // 구별 신고가 건수 (최근 30일 count30d 기준, sizeFilter 적용)
+                const guRows = (hlData.guLeaders || [])
+                  .map(g => {
+                    const count30 = sizeFilter === '전체'
+                      ? (g.count30d || 0)
+                      : (g.recentTrades || []).filter(t => getSizeGroup(t.area) === sizeFilter).length;
+                    const recentFiltered = sizeFilter === '전체'
+                      ? (g.recentTrades || [])
+                      : (g.recentTrades || []).filter(t => getSizeGroup(t.area) === sizeFilter);
+                    const sizeLeader = sizeFilter === '전체' ? g : { ...g, aptName: g.leaderBySize?.[sizeFilter]?.aptName || g.aptName, topPriceNum: g.leaderBySize?.[sizeFilter]?.priceNum || g.topPriceNum };
+                    return { guName: g.guName, guCode: g.guCode, count30, recentFiltered, topPriceNum: sizeLeader.topPriceNum, aptName: sizeLeader.aptName };
+                  })
+                  .sort((a,b) => b.topPriceNum - a.topPriceNum); // 신고가 내림차순
+                const maxGuCount = Math.max(...guRows.map(r => r.count30), 1);
+
+                return (
+                  <>
+                    {/* 국토부 추적 배지 */}
+                    <div style={{ ...trackSection, marginBottom:12 }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                        <span style={{ fontSize:13, fontWeight:700, color:'var(--text)' }}>📡 서울 신고가 추적</span>
+                        <div style={{ display:'flex', gap:5 }}>
+                          <div style={trackBadge}>오늘 {hlToday}건</div>
+                          <div style={trackBadge}>1주 {hlWeek}건</div>
+                          <div style={trackBadge}>1달 {hlMonth}건</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize:9, color:'var(--gray)', marginTop:4 }}>
+                        신고일 기준 · {sizeFilter !== '전체' ? `${sizeFilter} 기준` : '서울 전역'} · {hlData.total?.toLocaleString()}건 분석
+                        <span style={{ marginLeft:6 }}>· 20평=59㎡ / 30평=84㎡ / 40평=114㎡</span>
+                      </div>
+                    </div>
+
+                    {/* 일별 신고가 건수 — 접기/펼치기 + 클릭 확장 */}
+                    {dailyRows.length > 0 && <HlDailySection dailyRows={dailyRows} rawHpAll={rawHpAll} sizeFilter={sizeFilter} fmtPrice={fmtPrice} cutoffStr={cutoffStr} />}
+
+                    {/* 구별 신고가 건수 — 접기/펼치기 + 클릭 확장 */}
+                    <HlGuSection allGuLeaders={hlData.guLeaders || []} sizeFilter={sizeFilter} fmtPrice={fmtPrice} getSizeGroup={getSizeGroup} cutoffStr={cutoffStr} />
+                  </>
+                );
+              })()}
+
+              <div style={{ fontSize:10, color:'var(--gray)', marginBottom:14 }}>
+                매매 기준 · {hlData.total?.toLocaleString()}건 분석 · 전용면적 기준 평형 분류
+                {sizeFilter !== '전체' && <span style={{ marginLeft:5, color:'var(--navy)', fontWeight:600 }}>· {sizeFilter} 필터 적용</span>}
+                <span style={{ marginLeft:5 }}>· 20평=59㎡ / 30평=84㎡ / 40평=114㎡</span>
+              </div>
+
+              {/* ── 신고가 TOP 30 (3컬럼 그리드) ── */}
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                <div style={{ fontWeight:700, fontSize:14, color:'var(--text)' }}>🔥 서울 신고가 TOP {hp.length}</div>
+                {hlTopSelected && (
+                  <button onClick={() => setHlSelectedGu(null)}
+                    style={{ fontSize:10, color:'var(--gray)', background:'none', border:'1px solid var(--border)', borderRadius:8, padding:'3px 8px', cursor:'pointer' }}>
+                    전체 보기
+                  </button>
+                )}
+              </div>
+              {hp.length === 0
+                ? <div style={emptyBox}>해당 조건 데이터 없음</div>
+                : (<>
+                {/* 선택된 단지 상세 (TOP30 카드 탭 시) */}
+                {hlTopSelected && (() => {
+                  const selKey = hlTopSelected.replace('TOP_','');
+                  const [selName, selGu] = selKey.split('__');
+                  // 해당 구의 guLeader에서 해당 단지 거래 찾기
+                  const guData = allGl.find(g => g.guCode === selGu);
+                  const complexTrades = (guData?.topTrades || [])
+                    .filter(t => t.apt_name === selName)
+                    .filter(t => sizeFilter === '전체' || getSizeGroup(t.area) === sizeFilter);
+                  return (
+                    <div style={{ marginBottom:16 }}>
+                      <div style={{ fontWeight:700, fontSize:13, color:'var(--text)', marginBottom:8 }}>
+                        {selName} 거래 내역 ({complexTrades.length}건)
+                      </div>
+                      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                        {complexTrades.length === 0
+                          ? <div style={emptyBox}>표시할 거래 없음</div>
+                          : complexTrades.map((t, i) => {
+                            const a = parseFloat(t.area)||0;
+                            const py = Math.round(a * 1.35 / 3.3);
+                            const dt = `${t.deal_year}.${String(t.deal_month).replace(/^0/,'')}.${String(t.deal_day||'').replace(/^0/,'')}`.replace(/\.$/, '');
+                            return (
+                              <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:10, border:'1px solid var(--border)', background:'var(--bg)' }}>
+                                <span style={{ fontSize:11, color:'var(--gray)', minWidth:18 }}>{i+1}</span>
+                                <div style={{ flex:1 }}>
+                                  <div style={{ fontSize:11, color:'var(--gray)' }}>{py}평({a.toFixed(0)}㎡) · {t.floor}층 · {dt} · {t.dong}</div>
+                                </div>
+                                <div style={{ fontSize:14, fontWeight:800, color:'#D94545', wordBreak:'keep-all' }}>{fmtPrice(t.priceNum)}</div>
+                              </div>
+                            );
+                          })
+                        }
+                      </div>
+                    </div>
+                  );
+                })()}
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:28 }}>
+                  {hp.map((t, idx) => {
+                    const pn = t.priceNum || 0;
+                    const area = parseFloat(t.area) || 0;
+                    const pyeong = Math.round(area * 1.35 / 3.3);
+                    const dateStr = `${t.deal_year}.${String(t.deal_month).replace(/^0/,'')}${t.deal_day ? '.'+String(t.deal_day).replace(/^0/,'') : ''}`;
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
+                    const isTop3 = idx < 3;
+                    const cardKey = `TOP_${t.apt_name}__${t.lawd_cd}`;
+                    const isSelected = hlTopSelected === cardKey;
+
+                    return (
+                      <div key={idx}
+                        onClick={() => setHlSelectedGu(isSelected ? null : cardKey)}
+                        style={{
+                          background: isSelected ? 'rgba(217,69,69,0.08)' : isTop3 ? 'rgba(217,69,69,0.04)' : 'var(--bg)',
+                          border: `1px solid ${isSelected ? 'rgba(217,69,69,0.4)' : isTop3 ? 'rgba(217,69,69,0.2)' : 'var(--border)'}`,
+                          borderRadius: 12, padding: '10px 10px 8px',
+                          display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, cursor: 'pointer',
+                        }}>
+                        <div style={{ display:'flex', alignItems:'baseline', gap:4, minWidth:0 }}>
+                          <span style={{ fontSize:12, fontWeight:800, color:isTop3?'#D94545':'var(--gray)', flexShrink:0 }}>{medal || `${idx+1}`}</span>
+                          <span style={{ fontSize:12, fontWeight:700, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', minWidth:0 }}>
+                            {t.apt_name}
+                          </span>
+                        </div>
+                        <div style={{ fontSize:10, color:'var(--gray)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                          {t.guName} {t.dong}
+                        </div>
+                        <div style={{ fontSize:10, color:'var(--gray)' }}>{pyeong}평 · {t.floor}층 · {dateStr}</div>
+                        <div style={{ fontSize:14, fontWeight:800, color:'#D94545', marginTop:2, wordBreak:'keep-all' }}>{fmtPrice(pn)}</div>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                          <AptLinks name={t.apt_name} dong={t.dong} />
+                          <span style={{ fontSize:9, color:'var(--gray)' }}>탭 → 상세▶</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>)}
+
+              {/* ── 구별 대장 단지 ── */}
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
+                <div style={{ fontWeight:700, fontSize:14, color:'var(--text)' }}>🏆 구별 대장 단지</div>
+                {hlSelectedGu && (
+                  <button onClick={() => setHlSelectedGu(null)}
+                    style={{ fontSize:10, color:'var(--gray)', background:'none', border:'1px solid var(--border)', borderRadius:8, padding:'3px 8px', cursor:'pointer' }}>
+                    전체 보기
+                  </button>
+                )}
+              </div>
+              <div style={{ fontSize:10, color:'var(--gray)', marginBottom:12 }}>
+                최근 90일 · 구 카드 탭 → 해당 구 top 15 상세
+              </div>
+
+              {/* 구 선택 드롭다운 */}
+              <select
+                value={(!hlSelectedGu || hlSelectedGu.startsWith('TOP_')) ? '' : hlSelectedGu}
+                onChange={e => setHlSelectedGu(e.target.value || null)}
+                style={{ width:'100%', padding:'8px 10px', borderRadius:10, fontSize:12, border:'1px solid var(--border)',
+                  background:'var(--bg)', color:'var(--text)', marginBottom:12, cursor:'pointer' }}
+              >
+                <option value=''>구 선택 → 상세 신고가 보기</option>
+                {gl.map(g => (
+                  <option key={g.guCode} value={g.guCode}>
+                    {g.guName} — {g.aptName} {fmtPrice(g.topPriceNum)}
+                  </option>
+                ))}
+              </select>
+
+              {/* 선택된 구 상세 (TOP_ prefix 없을 때만) */}
+              {hlSelectedGu && !hlSelectedGu.startsWith('TOP_') && (() => {
+                const selGu = gl.find(g => g.guCode === hlSelectedGu);
+                if (!selGu) return null;
+                const guTrades = (selGu.topTrades || [])
+                  .filter(t => sizeFilter === '전체' || getSizeGroup(t.area) === sizeFilter);
+                return (
+                  <div style={{ marginBottom:20 }}>
+                    <div style={{ fontWeight:700, fontSize:13, color:'var(--text)', marginBottom:8 }}>
+                      {selGu.guName} 신고가 TOP {guTrades.length}
+                    </div>
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      {guTrades.length === 0
+                        ? <div style={emptyBox}>해당 평형 데이터 없음</div>
+                        : guTrades.map((t, idx) => {
+                          const area = parseFloat(t.area) || 0;
+                          const pyeong = Math.round(area * 1.35 / 3.3);
+                          const dateStr = `${t.deal_year}.${String(t.deal_month).replace(/^0/,'')}${t.deal_day ? '.'+String(t.deal_day).replace(/^0/,'') : ''}`;
+                          const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
+                          return (
+                            <div key={idx} style={{
+                              background: idx < 3 ? 'rgba(217,69,69,0.04)' : 'var(--bg)',
+                              border: `1px solid ${idx < 3 ? 'rgba(217,69,69,0.18)' : 'var(--border)'}`,
+                              borderRadius:10, padding:'9px 12px',
+                              display:'flex', alignItems:'center', gap:8, minWidth:0,
+                            }}>
+                              <span style={{ fontSize:13, fontWeight:800, color:idx<3?'#D94545':'var(--gray)', flexShrink:0, minWidth:22, textAlign:'center' }}>
+                                {medal || `${idx+1}`}
+                              </span>
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                                  {t.apt_name}
+                                  <AptLinks name={t.apt_name} dong={t.dong} />
+                                  <span style={{ fontSize:10, color:'var(--gray)', fontWeight:400, marginLeft:4 }}>{t.dong}</span>
+                                </div>
+                                <div style={{ fontSize:10, color:'var(--gray)' }}>
+                                  {pyeong}평({area.toFixed(1)}㎡) · {t.floor}층 · {dateStr}
+                                </div>
+                              </div>
+                              <div style={{ fontSize:14, fontWeight:800, color:'#D94545', flexShrink:0, wordBreak:'keep-all' }}>
+                                {fmtPrice(t.priceNum)}
+                              </div>
+                            </div>
+                          );
+                        })
+                      }
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 구별 대장 단지 그리드 (전체) */}
+              {gl.length === 0
+                ? <div style={emptyBox}>해당 조건 데이터 없음</div>
+                : (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:24 }}>
+                  {gl.map((g) => {
+                    const priceNum = g.topPriceNum || 0;
+                    const area = parseFloat(g.topArea) || 0;
+                    const pyeong = Math.round(area * 1.35 / 3.3);
+                    const isSelected = hlSelectedGu === g.guCode;
+
+                    return (
+                      <div key={g.guCode}
+                        onClick={() => setHlSelectedGu(isSelected ? null : g.guCode)}
+                        style={{
+                          background: isSelected ? 'rgba(217,69,69,0.06)' : 'var(--bg)',
+                          border: `1px solid ${isSelected ? 'rgba(217,69,69,0.3)' : 'var(--border)'}`,
+                          borderRadius: 12, padding: '10px 10px 8px',
+                          display: 'flex', flexDirection: 'column', gap: 3,
+                          minWidth: 0, cursor: 'pointer',
+                        }}>
+                        <div style={{ fontSize:10, color:'var(--gold)', fontWeight:700 }}>{g.guName}</div>
+                        <div style={{
+                          fontSize: 12, fontWeight: 700, color: 'var(--text)',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>{g.aptName}</div>
+                        <div style={{ fontSize:10, color:'var(--gray)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                          {g.dong} · {pyeong}평
+                        </div>
+                        <div style={{ fontSize:13, fontWeight:800, color:'#D94545', marginTop:2, wordBreak:'keep-all' }}>
+                          {fmtPrice(priceNum)}
+                        </div>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                          <AptLinks name={g.aptName} dong={g.dong} />
+                          <span style={{ fontSize:9, color:'var(--gray)' }}>{g.topDate} · 상세▶</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <button
+                style={refreshBtn}
+                onClick={() => { setHlData(null); setHlLoading(true); fetch('/api/seoul-highlights').then(r=>r.ok?r.json():null).then(j=>setHlData(j)).catch(()=>{}).finally(()=>setHlLoading(false)); }}
+              >
+                🔄 새 데이터 불러오기
+              </button>
+            </>)}
+          </>
+        );
+      })()}
+
     </div>
   );
 }
