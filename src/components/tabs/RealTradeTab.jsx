@@ -1361,7 +1361,7 @@ export default function RealTradeTab() {
       })()}
 
       {/* ── 기존 강서구/마곡동 탭 콘텐츠 ── */}
-      {subTab !== 'seoul' && (<>
+      {subTab !== 'seoul' && subTab !== 'daily' && (<>
 
       {/* 보기 모드 */}
       <div style={{ display:'flex', gap:6, marginBottom:8 }}>
