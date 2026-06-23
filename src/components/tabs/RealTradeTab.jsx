@@ -2475,8 +2475,9 @@ export default function RealTradeTab() {
         <div>
           {/* 평형 필터 */}
           <div style={sizeFilterRow}>
-            {['전체','20평형','30평형','40평형','50평+'].map(f => (
-              <button key={f} style={{ ...sizeBtn, ...(sizeFilter === f ? sizeBtnActive : {}) }}
+            {SIZE_FILTERS.map(f => (
+              <button key={f}
+                style={sizeFilter === f ? { ...sizeFilterBtn, background:'rgba(200,168,64,0.15)', color:'var(--gold)', border:'1px solid var(--gold)', fontWeight:700 } : sizeFilterBtn}
                 onClick={() => setSizeFilter(f)}>{f}</button>
             ))}
           </div>
@@ -2657,9 +2658,10 @@ const dailySectionTitle = {
 };
 
 const seoulTabBtn = {
-  width:'100%', padding:'9px 12px', borderRadius:12, fontSize:12, fontWeight:600,
+  width:'100%', padding:'8px 8px', borderRadius:12, fontSize:11, fontWeight:600,
   border:'1px solid var(--border)', background:'#FFFFFF', color:'var(--gray)',
-  cursor:'pointer', textAlign:'left', marginBottom:14,
+  cursor:'pointer', textAlign:'left', marginBottom:14, whiteSpace:'nowrap',
+  overflow:'hidden', textOverflow:'ellipsis',
 };
 const seoulTabActive = {
   background:'var(--navy)', color:'#FFFFFF', border:'none',
