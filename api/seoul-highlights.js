@@ -178,7 +178,10 @@ export default async function handler(req, res) {
   const dayMap = {};
   for (const t of allTradesFlat) {
     if (!t.deal_year || !t.deal_month || !t.deal_day) continue;
-    const key = `${t.deal_year}.${String(parseInt(t.deal_month))}.${String(parseInt(t.deal_day))}`;
+    const y = t.deal_year;
+    const m = String(parseInt(t.deal_month)).padStart(2, '0');
+    const d = String(parseInt(t.deal_day)).padStart(2, '0');
+    const key = `${y}-${m}-${d}`; // YYYY-MM-DD (사전순 = 날짜순)
     if (!dayMap[key]) dayMap[key] = [];
     dayMap[key].push({
       apt_name: t.apt_name,
@@ -187,12 +190,13 @@ export default async function handler(req, res) {
       floor: t.floor,
       dong: t.dong,
       guName: t.guName,
+      lawd_cd: t.lawd_cd,
     });
   }
   const dailyAll = Object.entries(dayMap)
-    .sort(([a], [b]) => b.localeCompare(a))
+    .sort(([a], [b]) => b.localeCompare(a))  // YYYY-MM-DD 형식이므로 사전순 = 날짜 내림차순
     .map(([date, trades]) => ({
-      date,
+      date,  // YYYY-MM-DD
       count: trades.length,
       trades: trades.sort((a, b) => b.priceNum - a.priceNum),
     }));

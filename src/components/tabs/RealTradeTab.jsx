@@ -245,8 +245,9 @@ function HlGuSection({ allGuLeaders, sizeFilter, fmtPrice, getSizeGroup, cutoffS
 }
 
 /** 서울 전역 일별 거래현황 섹션 */
-function SeoulDailySection({ days, sizeFilter, fmtPrice, getSizeGroup }) {
+function SeoulDailySection({ days, sizeFilter, fmtPrice, getSizeGroup, guLeaders }) {
   const [expandedDate, setExpandedDate] = useState(null);
+  const [expandedApt, setExpandedApt] = useState(null); // "날짜__단지명__구이름"
 
   const filteredDays = useMemo(() => {
     if (!days) return [];
@@ -257,6 +258,19 @@ function SeoulDailySection({ days, sizeFilter, fmtPrice, getSizeGroup }) {
       return { date, trades: filtered, totalCount: count };
     }).filter(d => d.trades.length > 0);
   }, [days, sizeFilter]);
+
+  // YYYY-MM-DD → "YYYY.M.D" 표시용 변환
+  const fmtDate = (d) => {
+    const [y, m, day] = d.split('-');
+    return `${y}.${parseInt(m)}.${parseInt(day)}`;
+  };
+
+  // 단지 클릭 시 해당 구의 guLeaders에서 전체 거래 내역 조회
+  const getAptTrades = (aptName, guName) => {
+    const gl = (guLeaders || []).find(g => g.guName === guName);
+    if (!gl) return [];
+    return (gl.topTrades || []).filter(t => t.apt_name === aptName);
+  };
 
   if (filteredDays.length === 0) return (
     <div style={{ textAlign:'center', padding:'40px 0', color:'var(--gray)', fontSize:13 }}>
@@ -269,8 +283,8 @@ function SeoulDailySection({ days, sizeFilter, fmtPrice, getSizeGroup }) {
       {filteredDays.map(({ date, trades, totalCount }) => (
         <div key={date} style={{ background:'#fff', borderRadius:12, border:'1px solid rgba(11,40,73,0.10)', marginBottom:8, overflow:'hidden' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px', cursor:'pointer', background: expandedDate === date ? 'rgba(11,40,73,0.05)' : 'rgba(11,40,73,0.02)' }}
-               onClick={() => setExpandedDate(expandedDate === date ? null : date)}>
-            <span style={{ fontWeight:700, fontSize:13, color:'var(--navy)' }}>{date}</span>
+               onClick={() => { setExpandedDate(expandedDate === date ? null : date); setExpandedApt(null); }}>
+            <span style={{ fontWeight:700, fontSize:13, color:'var(--navy)' }}>{fmtDate(date)}</span>
             <span style={{ fontSize:11, color:'var(--gray)' }}>
               {expandedDate === date ? '▲' : '▼'} {trades.length}건{sizeFilter !== '전체' ? ` (전체 ${totalCount}건 중)` : ''}
             </span>
@@ -279,15 +293,46 @@ function SeoulDailySection({ days, sizeFilter, fmtPrice, getSizeGroup }) {
             <div style={{ padding:'4px 12px 8px' }}>
               {trades.map((t, i) => {
                 const pyeong = Math.round(parseFloat(t.area) * 1.35 / 3.3);
+                const aptKey = `${date}__${t.apt_name}__${t.guName}`;
+                const isAptOpen = expandedApt === aptKey;
+                const aptTrades = isAptOpen ? getAptTrades(t.apt_name, t.guName) : [];
                 return (
-                  <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 4px', borderBottom: i < trades.length-1 ? '1px solid rgba(11,40,73,0.05)' : 'none', gap:8, flexWrap:'wrap' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', flex:1, minWidth:0 }}>
-                      <span style={{ fontSize:9, padding:'2px 6px', background:'rgba(11,40,73,0.08)', color:'var(--navy)', borderRadius:8, fontWeight:600, whiteSpace:'nowrap' }}>{t.guName}</span>
-                      <span style={{ fontSize:12, fontWeight:600, color:'var(--navy)', minWidth:0 }}>{t.apt_name}</span>
-                      <span style={{ fontSize:10, color:'var(--gray)', whiteSpace:'nowrap' }}>{t.dong} · {pyeong}평 · {t.floor}층</span>
-                      <AptLinks name={t.apt_name} dong={t.dong} />
+                  <div key={i} style={{ borderBottom: i < trades.length-1 ? '1px solid rgba(11,40,73,0.05)' : 'none' }}>
+                    {/* 거래 행 */}
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 4px', gap:8, flexWrap:'wrap', cursor:'pointer' }}
+                         onClick={() => setExpandedApt(isAptOpen ? null : aptKey)}>
+                      <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', flex:1, minWidth:0 }}>
+                        <span style={{ fontSize:9, padding:'2px 6px', background:'rgba(11,40,73,0.08)', color:'var(--navy)', borderRadius:8, fontWeight:600, whiteSpace:'nowrap' }}>{t.guName}</span>
+                        <span style={{ fontSize:12, fontWeight:600, color: isAptOpen ? '#D94545' : 'var(--navy)', minWidth:0 }}>{t.apt_name}</span>
+                        <span style={{ fontSize:10, color:'var(--gray)', whiteSpace:'nowrap' }}>{t.dong} · {pyeong}평 · {t.floor}층</span>
+                        <AptLinks name={t.apt_name} dong={t.dong} />
+                      </div>
+                      <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                        <span style={{ fontWeight:700, fontSize:13, color:'var(--navy)', whiteSpace:'nowrap' }}>{fmtPrice(t.priceNum)}</span>
+                        <span style={{ fontSize:10, color:'var(--gray)' }}>{isAptOpen ? '▲' : '▼'}</span>
+                      </div>
                     </div>
-                    <span style={{ fontWeight:700, fontSize:13, color:'var(--navy)', whiteSpace:'nowrap' }}>{fmtPrice(t.priceNum)}</span>
+                    {/* 단지 전체 거래 내역 펼침 */}
+                    {isAptOpen && (
+                      <div style={{ background:'rgba(11,40,73,0.03)', borderRadius:8, margin:'0 0 6px 0', padding:'8px 10px' }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:'var(--navy)', marginBottom:6 }}>
+                          {t.apt_name} 전체 거래 내역 ({aptTrades.length}건)
+                        </div>
+                        {aptTrades.length === 0
+                          ? <div style={{ fontSize:11, color:'var(--gray)' }}>데이터 없음 (신고가 상위 50건 기준)</div>
+                          : aptTrades.map((at, ai) => {
+                            const ap = Math.round(parseFloat(at.area) * 1.35 / 3.3);
+                            const adStr = `${at.deal_year}.${String(parseInt(at.deal_month))}.${String(parseInt(at.deal_day))}`;
+                            return (
+                              <div key={ai} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'4px 0', borderBottom: ai < aptTrades.length-1 ? '1px solid rgba(11,40,73,0.06)' : 'none', gap:8 }}>
+                                <span style={{ fontSize:10, color:'var(--gray)', whiteSpace:'nowrap' }}>{adStr} · {ap}평 · {at.floor}층</span>
+                                <span style={{ fontSize:12, fontWeight:700, color:'var(--navy)', whiteSpace:'nowrap' }}>{fmtPrice(at.priceNum)}</span>
+                              </div>
+                            );
+                          })
+                        }
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -913,7 +958,7 @@ export default function RealTradeTab() {
 
   return (
     <div style={wrap}>
-      <div style={sectionTitle}>강서구 실거래가</div>
+      <div style={sectionTitle}>실거래가 현황</div>
       <div style={sectionSub}>국토교통부 실거래 신고 데이터 · 최근 12개월</div>
       <div style={goldLine} />
 
@@ -2471,12 +2516,8 @@ export default function RealTradeTab() {
             const dlDays2 = hlPeriod === '1m' ? 30 : hlPeriod === '2m' ? 60 : 90;
             const dlCutoff = new Date(); dlCutoff.setDate(dlCutoff.getDate() - dlDays2);
             const dlCutoffStr = dlCutoff.toISOString().slice(0, 10);
-            // deal_year.deal_month.deal_day 형식 날짜와 비교하기 위해 date 파싱
-            const filteredDays = (hlData.dailyAll || []).filter(({ date }) => {
-              const [y, m, d] = date.split('.').map(Number);
-              const dateObj = new Date(y, m - 1, d);
-              return dateObj >= dlCutoff;
-            });
+            // YYYY-MM-DD 형식이므로 문자열 비교로 충분
+            const filteredDays = (hlData.dailyAll || []).filter(({ date }) => date >= dlCutoffStr);
             const totalFiltered = filteredDays.reduce((s, d) => s + d.count, 0);
             return (
               <>
@@ -2488,6 +2529,7 @@ export default function RealTradeTab() {
                   sizeFilter={sizeFilter}
                   fmtPrice={fmtPrice}
                   getSizeGroup={getSizeGroup}
+                  guLeaders={hlData.guLeaders || []}
                 />
               </>
             );
