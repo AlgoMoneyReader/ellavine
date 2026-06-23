@@ -245,9 +245,23 @@ function HlGuSection({ allGuLeaders, sizeFilter, fmtPrice, getSizeGroup, cutoffS
 }
 
 /** 서울 전역 일별 거래현황 섹션 */
-function SeoulDailySection({ days, sizeFilter, fmtPrice, getSizeGroup, guLeaders }) {
+function SeoulDailySection({ days, allDays, sizeFilter, fmtPrice, getSizeGroup }) {
   const [expandedDate, setExpandedDate] = useState(null);
   const [expandedApt, setExpandedApt] = useState(null); // "날짜__단지명__구이름"
+
+  // dailyAll 전체에서 해당 단지 거래 추출 (신고가 아닌 전체 거래)
+  const getAptTrades = useMemo(() => {
+    const map = {};
+    for (const { date, trades } of (allDays || [])) {
+      for (const t of trades) {
+        const key = `${t.apt_name}__${t.guName}`;
+        if (!map[key]) map[key] = [];
+        map[key].push({ ...t, date });
+      }
+    }
+    return (aptName, guName) => (map[`${aptName}__${guName}`] || [])
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }, [allDays]);
 
   const filteredDays = useMemo(() => {
     if (!days) return [];
@@ -319,10 +333,10 @@ function SeoulDailySection({ days, sizeFilter, fmtPrice, getSizeGroup, guLeaders
                           {t.apt_name} 전체 거래 내역 ({aptTrades.length}건)
                         </div>
                         {aptTrades.length === 0
-                          ? <div style={{ fontSize:11, color:'var(--gray)' }}>데이터 없음 (신고가 상위 50건 기준)</div>
+                          ? <div style={{ fontSize:11, color:'var(--gray)' }}>데이터 없음</div>
                           : aptTrades.map((at, ai) => {
                             const ap = Math.round(parseFloat(at.area) * 1.35 / 3.3);
-                            const adStr = `${at.deal_year}.${String(parseInt(at.deal_month))}.${String(parseInt(at.deal_day))}`;
+                            const adStr = fmtDate(at.date); // YYYY-MM-DD → YYYY.M.D
                             return (
                               <div key={ai} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'4px 0', borderBottom: ai < aptTrades.length-1 ? '1px solid rgba(11,40,73,0.06)' : 'none', gap:8 }}>
                                 <span style={{ fontSize:10, color:'var(--gray)', whiteSpace:'nowrap' }}>{adStr} · {ap}평 · {at.floor}층</span>
@@ -2526,10 +2540,10 @@ export default function RealTradeTab() {
                 </div>
                 <SeoulDailySection
                   days={filteredDays}
+                  allDays={hlData.dailyAll || []}
                   sizeFilter={sizeFilter}
                   fmtPrice={fmtPrice}
                   getSizeGroup={getSizeGroup}
-                  guLeaders={hlData.guLeaders || []}
                 />
               </>
             );
