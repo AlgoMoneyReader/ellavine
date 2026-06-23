@@ -917,6 +917,17 @@ export default function RealTradeTab() {
       ? 'https://fin.land.naver.com/map?layer=apt&zoom=13&lat=37.5540&lng=126.8480'
       : 'https://fin.land.naver.com/map?layer=pre&zoom=13&lat=37.5540&lng=126.8480';
 
+  // 가격 포맷 유틸 (highlights·daily 공용)
+  function fmtPrice(priceNum) {
+    if (!priceNum) return '-';
+    if (priceNum >= 10000) {
+      const e = Math.floor(priceNum / 10000);
+      const m = priceNum % 10000;
+      return m > 0 ? `${e}억 ${m.toLocaleString()}만` : `${e}억`;
+    }
+    return `${priceNum.toLocaleString()}만`;
+  }
+
   return (
     <div style={wrap}>
       <div style={sectionTitle}>강서구 실거래가</div>
@@ -2122,15 +2133,7 @@ export default function RealTradeTab() {
         ];
 
         // 가격 포맷 유틸
-        function fmtPrice(priceNum) {
-          if (!priceNum) return '-';
-          if (priceNum >= 10000) {
-            const e = Math.floor(priceNum / 10000);
-            const m = priceNum % 10000;
-            return m > 0 ? `${e}억 ${m.toLocaleString()}만` : `${e}억`;
-          }
-          return `${priceNum.toLocaleString()}만`;
-        }
+        // fmtPrice는 컴포넌트 레벨에서 정의됨 (하단 참조)
 
         return (
           <>
