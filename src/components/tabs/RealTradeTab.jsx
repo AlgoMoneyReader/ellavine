@@ -244,6 +244,84 @@ function HlGuSection({ allGuLeaders, sizeFilter, fmtPrice, getSizeGroup, cutoffS
   );
 }
 
+/** 서울 전역 일별 거래현황 섹션 */
+function SeoulDailySection({ guLeaders, sizeFilter, fmtPrice, getSizeGroup, cutoffStr }) {
+  const [open, setOpen] = useState(true);
+  const [expandedDate, setExpandedDate] = useState(null);
+
+  // 모든 구의 topTrades 합산 → 기간 필터 → 평형 필터 → 날짜별 그룹
+  const allTrades = useMemo(() => {
+    const list = [];
+    for (const g of (guLeaders || [])) {
+      for (const t of (g.topTrades || [])) {
+        if (t.report_date < cutoffStr) continue;
+        if (sizeFilter !== '전체' && getSizeGroup(t.area) !== sizeFilter) continue;
+        list.push({ ...t, guName: t.guName || g.guName });
+      }
+    }
+    return list;
+  }, [guLeaders, cutoffStr, sizeFilter]);
+
+  // 날짜별 그룹 (deal_year/month/day 기준)
+  const dailyGroups = useMemo(() => {
+    const map = {};
+    for (const t of allTrades) {
+      const key = `${t.deal_year}.${String(t.deal_month).replace(/^0+/,'')}.${String(t.deal_day||'').replace(/^0+/,'')}`;
+      if (!map[key]) map[key] = [];
+      map[key].push(t);
+    }
+    return Object.entries(map)
+      .sort(([a],[b]) => b.localeCompare(a))
+      .map(([date, trades]) => ({
+        date,
+        trades: [...trades].sort((a,b) => b.priceNum - a.priceNum),
+      }));
+  }, [allTrades]);
+
+  if (dailyGroups.length === 0) return null;
+
+  return (
+    <div style={{ background:'#fff', borderRadius:12, border:'1px solid rgba(11,40,73,0.10)', marginBottom:12, overflow:'hidden' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', cursor:'pointer', background:'rgba(11,40,73,0.03)' }}
+           onClick={() => setOpen(o => !o)}>
+        <span style={{ fontWeight:700, fontSize:14, color:'var(--navy)' }}>📅 일별 거래현황</span>
+        <span style={{ fontSize:12, color:'var(--gray)' }}>{open ? '▲' : '▼'} {dailyGroups.length}일</span>
+      </div>
+      {open && (
+        <div style={{ padding:'8px 0' }}>
+          {dailyGroups.map(({ date, trades }) => (
+            <div key={date} style={{ borderBottom:'1px solid rgba(11,40,73,0.06)' }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 16px', cursor:'pointer', background: expandedDate === date ? 'rgba(11,40,73,0.04)' : 'transparent' }}
+                   onClick={() => setExpandedDate(expandedDate === date ? null : date)}>
+                <span style={{ fontWeight:600, fontSize:13, color:'var(--navy)' }}>{date}</span>
+                <span style={{ fontSize:11, color:'var(--gray)' }}>{expandedDate === date ? '▲' : '▼'} {trades.length}건</span>
+              </div>
+              {expandedDate === date && (
+                <div style={{ padding:'4px 12px 8px' }}>
+                  {trades.map((t, i) => {
+                    const pyeong = Math.round(parseFloat(t.area) * 1.35 / 3.3);
+                    return (
+                      <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 4px', borderBottom: i < trades.length-1 ? '1px solid rgba(11,40,73,0.05)' : 'none', gap:8, flexWrap:'wrap' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', flex:1, minWidth:0 }}>
+                          <span style={{ fontSize:9, padding:'2px 6px', background:'rgba(11,40,73,0.08)', color:'var(--navy)', borderRadius:8, fontWeight:600, whiteSpace:'nowrap' }}>{t.guName}</span>
+                          <span style={{ fontSize:12, fontWeight:600, color:'var(--navy)', minWidth:0 }}>{t.apt_name}</span>
+                          <span style={{ fontSize:10, color:'var(--gray)', whiteSpace:'nowrap' }}>{t.dong} · {pyeong}평 · {t.floor}층</span>
+                          <AptLinks name={t.apt_name} dong={t.dong} />
+                        </div>
+                        <span style={{ fontWeight:700, fontSize:13, color:'var(--navy)', whiteSpace:'nowrap' }}>{fmtPrice(t.priceNum)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function groupByComplex(items) {
   // 단지명+동 기준으로 그룹핑 (같은 이름이라도 다른 동이면 별도 단지)
   const map = {};
@@ -2157,6 +2235,15 @@ export default function RealTradeTab() {
 
                     {/* 구별 신고가 건수 — 접기/펼치기 + 클릭 확장 */}
                     <HlGuSection allGuLeaders={hlData.guLeaders || []} sizeFilter={sizeFilter} fmtPrice={fmtPrice} getSizeGroup={getSizeGroup} cutoffStr={cutoffStr} />
+
+                    {/* 서울 전역 일별 거래현황 */}
+                    <SeoulDailySection
+                      guLeaders={hlData.guLeaders || []}
+                      sizeFilter={sizeFilter}
+                      fmtPrice={fmtPrice}
+                      getSizeGroup={getSizeGroup}
+                      cutoffStr={cutoffStr}
+                    />
                   </>
                 );
               })()}

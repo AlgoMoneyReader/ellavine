@@ -130,6 +130,7 @@ export default async function handler(req, res) {
       deal_day: t.deal_day,
       dong: t.dong,
       report_date: t.report_date,
+      guName: t.guName,
     });
     const topTrades = dedupTrades(trades).slice(0, 50).map(mapTrade);
 
