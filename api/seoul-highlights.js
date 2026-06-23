@@ -173,7 +173,31 @@ export default async function handler(req, res) {
   // 가나다순 정렬
   guLeaders.sort((a, b) => a.guName.localeCompare(b.guName, 'ko'));
 
-  // ── 2. 서울 전역 신고가 — 전체 + 평형별 각 TOP 30 ────────────────
+  // ── 2. 서울 전역 일별 전체 거래 (계약일 기준) ─────────────────────
+  const allTradesFlat = dedupTrades(guResults.flatMap(({ trades }) => trades));
+  const dayMap = {};
+  for (const t of allTradesFlat) {
+    if (!t.deal_year || !t.deal_month || !t.deal_day) continue;
+    const key = `${t.deal_year}.${String(parseInt(t.deal_month))}.${String(parseInt(t.deal_day))}`;
+    if (!dayMap[key]) dayMap[key] = [];
+    dayMap[key].push({
+      apt_name: t.apt_name,
+      priceNum: t.priceNum,
+      area: t.area,
+      floor: t.floor,
+      dong: t.dong,
+      guName: t.guName,
+    });
+  }
+  const dailyAll = Object.entries(dayMap)
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([date, trades]) => ({
+      date,
+      count: trades.length,
+      trades: trades.sort((a, b) => b.priceNum - a.priceNum),
+    }));
+
+  // ── 3. 서울 전역 신고가 — 전체 + 평형별 각 TOP 30 ────────────────
   // 전체 raw 거래 (각 구 dedup 후 top 50 합산) → 전체 중복 제거 → 가격순
   const allRaw = dedupTrades(
     guResults.flatMap(({ trades }) => dedupTrades(trades).slice(0, 50))
@@ -194,6 +218,7 @@ export default async function handler(req, res) {
     highPrice,      // 전체 top 30 (전체 필터)
     highBySize,     // 평형별 top 30 { '20평형': [...], '30평형': [...], ... }
     guLeaders,
+    dailyAll,       // 일별 전체 거래 (계약일 기준, 가격 내림차순)
     since: sinceStr,
     updatedAt: new Date().toISOString(),
     total: totalCount,

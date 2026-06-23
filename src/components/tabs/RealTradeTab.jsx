@@ -714,7 +714,7 @@ export default function RealTradeTab() {
 
   // 서울 신고가 탭 진입 시 데이터 로드
   useEffect(() => {
-    if (subTab !== 'highlights') return;
+    if (subTab !== 'highlights' && subTab !== 'daily') return;
     if (hlData) return;
     setHlLoading(true);
     fetch('/api/seoul-highlights')
@@ -724,17 +724,7 @@ export default function RealTradeTab() {
       .finally(() => setHlLoading(false));
   }, [subTab]);
 
-  // 서울 일별 전체 거래 탭 진입 시 데이터 로드
-  useEffect(() => {
-    if (subTab !== 'daily') return;
-    setDlLoading(true);
-    setDlData(null);
-    fetch(`/api/seoul-daily?days=${dlDays}`)
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
-      .then(json => setDlData(json))
-      .catch(() => setDlData(null))
-      .finally(() => setDlLoading(false));
-  }, [subTab, dlDays]);
+  // daily 탭도 seoul-highlights 데이터 공용 (dailyAll 필드 포함)
 
   const SIZE_FILTERS = ['전체', '20평형', '30평형', '40평형', '50평+'];
 
@@ -2464,32 +2454,44 @@ export default function RealTradeTab() {
                 onClick={() => setSizeFilter(f)}>{f}</button>
             ))}
           </div>
-          {/* 기간 필터 */}
+          {/* 기간 필터 — hlPeriod 공용 (1m=30일, 2m=60일, 3m=90일) */}
           <div style={{ display:'flex', gap:6, marginBottom:12 }}>
-            {[[30,'최근 30일'],[60,'최근 60일'],[90,'최근 90일']].map(([d,label]) => (
-              <button key={d}
+            {[['1m','최근 30일'],['2m','최근 60일'],['3m','최근 90일']].map(([k,label]) => (
+              <button key={k}
                 style={{ padding:'5px 12px', borderRadius:20, fontSize:11, fontWeight:600, cursor:'pointer',
-                  background: dlDays === d ? 'var(--navy)' : '#fff',
-                  color: dlDays === d ? '#fff' : 'var(--gray)',
-                  border: `1px solid ${dlDays === d ? 'var(--navy)' : 'var(--border)'}` }}
-                onClick={() => setDlDays(d)}>{label}</button>
+                  background: hlPeriod === k ? 'var(--navy)' : '#fff',
+                  color: hlPeriod === k ? '#fff' : 'var(--gray)',
+                  border: `1px solid ${hlPeriod === k ? 'var(--navy)' : 'var(--border)'}` }}
+                onClick={() => setHlPeriod(k)}>{label}</button>
             ))}
           </div>
-          {dlLoading && <div style={{ textAlign:'center', padding:40, color:'var(--gray)', fontSize:13 }}>로딩 중...</div>}
-          {!dlLoading && !dlData && <div style={{ textAlign:'center', padding:40, color:'var(--gray)', fontSize:13 }}>데이터를 불러올 수 없습니다</div>}
-          {!dlLoading && dlData && (
-            <>
-              <div style={{ fontSize:11, color:'var(--gray)', marginBottom:8 }}>
-                총 <strong>{dlData.total?.toLocaleString()}건</strong> · {dlData.days?.length}일 · {dlData.since} 이후
-              </div>
-              <SeoulDailySection
-                days={dlData.days || []}
-                sizeFilter={sizeFilter}
-                fmtPrice={fmtPrice}
-                getSizeGroup={getSizeGroup}
-              />
-            </>
-          )}
+          {hlLoading && <div style={{ textAlign:'center', padding:40, color:'var(--gray)', fontSize:13 }}>로딩 중...</div>}
+          {!hlLoading && !hlData && <div style={{ textAlign:'center', padding:40, color:'var(--gray)', fontSize:13 }}>데이터를 불러올 수 없습니다</div>}
+          {!hlLoading && hlData && (() => {
+            const dlDays2 = hlPeriod === '1m' ? 30 : hlPeriod === '2m' ? 60 : 90;
+            const dlCutoff = new Date(); dlCutoff.setDate(dlCutoff.getDate() - dlDays2);
+            const dlCutoffStr = dlCutoff.toISOString().slice(0, 10);
+            // deal_year.deal_month.deal_day 형식 날짜와 비교하기 위해 date 파싱
+            const filteredDays = (hlData.dailyAll || []).filter(({ date }) => {
+              const [y, m, d] = date.split('.').map(Number);
+              const dateObj = new Date(y, m - 1, d);
+              return dateObj >= dlCutoff;
+            });
+            const totalFiltered = filteredDays.reduce((s, d) => s + d.count, 0);
+            return (
+              <>
+                <div style={{ fontSize:11, color:'var(--gray)', marginBottom:8 }}>
+                  총 <strong>{totalFiltered.toLocaleString()}건</strong> · {filteredDays.length}일
+                </div>
+                <SeoulDailySection
+                  days={filteredDays}
+                  sizeFilter={sizeFilter}
+                  fmtPrice={fmtPrice}
+                  getSizeGroup={getSizeGroup}
+                />
+              </>
+            );
+          })()}
         </div>
         );
       })()}
