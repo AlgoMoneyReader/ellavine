@@ -2167,10 +2167,6 @@ export default function RealTradeTab() {
 
               {/* ── 신고가 탭 전용: 국토부 실거래 추적 / 일별 / 구별 요약 ── */}
               {(() => {
-                // 현재 평형 필터 기준 신고가 raw 데이터
-                const rawHpAll = sizeFilter !== '전체' && hlData.highBySize?.[sizeFilter]
-                  ? hlData.highBySize[sizeFilter]
-                  : (hlData.highPrice || []);
                 const todayStr2 = new Date().toISOString().slice(0,10);
                 const weekAgo2 = new Date(); weekAgo2.setDate(weekAgo2.getDate()-7);
                 const monthAgo2 = new Date(); monthAgo2.setDate(monthAgo2.getDate()-30);
@@ -2184,18 +2180,6 @@ export default function RealTradeTab() {
                 const hlToday = allGuTrades.filter(t => t.report_date === todayStr2).length;
                 const hlWeek  = allGuTrades.filter(t => t.report_date >= wStr).length;
                 const hlMonth = allGuTrades.filter(t => t.report_date >= mStr).length;
-
-                // 일별 신고가 건수 (rawHpAll 기준, 날짜별 trades 맵)
-                const dailyTradesMap = {};
-                rawHpAll.forEach(t => {
-                  if (!t.report_date) return;
-                  if (!dailyTradesMap[t.report_date]) dailyTradesMap[t.report_date] = [];
-                  dailyTradesMap[t.report_date].push(t);
-                });
-                const dailyRows = Object.entries(dailyTradesMap)
-                  .sort((a,b) => b[0].localeCompare(a[0]))
-                  .slice(0, 30);
-                const maxDailyHl = Math.max(...dailyRows.map(([,ts]) => ts.length), 1);
 
                 // 구별 신고가 건수 (최근 30일 count30d 기준, sizeFilter 적용)
                 const guRows = (hlData.guLeaders || [])
@@ -2230,13 +2214,7 @@ export default function RealTradeTab() {
                       </div>
                     </div>
 
-                    {/* 일별 신고가 건수 — 접기/펼치기 + 클릭 확장 */}
-                    {dailyRows.length > 0 && <HlDailySection dailyRows={dailyRows} rawHpAll={rawHpAll} sizeFilter={sizeFilter} fmtPrice={fmtPrice} cutoffStr={cutoffStr} />}
-
-                    {/* 구별 신고가 건수 — 접기/펼치기 + 클릭 확장 */}
-                    <HlGuSection allGuLeaders={hlData.guLeaders || []} sizeFilter={sizeFilter} fmtPrice={fmtPrice} getSizeGroup={getSizeGroup} cutoffStr={cutoffStr} />
-
-                    {/* 서울 전역 일별 거래현황 */}
+                    {/* 서울 전역 일별 거래현황 (구/동/단지 포함) */}
                     <SeoulDailySection
                       guLeaders={hlData.guLeaders || []}
                       sizeFilter={sizeFilter}
@@ -2244,6 +2222,9 @@ export default function RealTradeTab() {
                       getSizeGroup={getSizeGroup}
                       cutoffStr={cutoffStr}
                     />
+
+                    {/* 구별 신고가 건수 — 접기/펼치기 + 클릭 확장 */}
+                    <HlGuSection allGuLeaders={hlData.guLeaders || []} sizeFilter={sizeFilter} fmtPrice={fmtPrice} getSizeGroup={getSizeGroup} cutoffStr={cutoffStr} />
                   </>
                 );
               })()}
