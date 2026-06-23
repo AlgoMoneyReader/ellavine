@@ -733,7 +733,7 @@ export default function RealTradeTab() {
 
   // 서울 신고가 탭 진입 시 데이터 로드
   useEffect(() => {
-    if (subTab !== 'highlights') return;
+    if (subTab !== 'highlights' && subTab !== 'daily') return;
     if (hlData) return;
     setHlLoading(true);
     fetch('/api/seoul-highlights')
@@ -957,6 +957,13 @@ export default function RealTradeTab() {
         >
           🔥 서울 신고가
           <span style={{ fontSize:9, marginLeft:5, opacity:0.75 }}>주요단지</span>
+        </button>
+        <button
+          style={{ ...seoulTabBtn, flex:1, ...(subTab === 'daily' ? { background:'#1a6b3c', color:'#fff', border:'none' } : {}) }}
+          onClick={() => { setSubTab('daily'); }}
+        >
+          📅 일별 거래현황
+          <span style={{ fontSize:9, marginLeft:5, opacity:0.75 }}>서울 전체</span>
         </button>
       </div>
 
@@ -2455,6 +2462,47 @@ export default function RealTradeTab() {
               </button>
             </>)}
           </>
+        );
+      })()}
+
+      {/* ── 📅 서울 일별 거래현황 탭 ── */}
+      {subTab === 'daily' && (() => {
+        const dailyPeriodDays = hlPeriod === '1m' ? 30 : hlPeriod === '2m' ? 60 : 90;
+        const dailyCutoff = new Date();
+        dailyCutoff.setDate(dailyCutoff.getDate() - dailyPeriodDays);
+        const dailyCutoffStr = dailyCutoff.toISOString().slice(0, 10);
+        return (
+        <div>
+          {/* 평형 필터 */}
+          <div style={sizeFilterRow}>
+            {['전체','20평형','30평형','40평형','50평+'].map(f => (
+              <button key={f} style={{ ...sizeBtn, ...(sizeFilter === f ? sizeBtnActive : {}) }}
+                onClick={() => setSizeFilter(f)}>{f}</button>
+            ))}
+          </div>
+          {/* 기간 필터 */}
+          <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+            {[['1m','최근 30일'],['2m','최근 60일'],['3m','최근 90일']].map(([k,label]) => (
+              <button key={k}
+                style={{ padding:'5px 12px', borderRadius:20, fontSize:11, fontWeight:600, cursor:'pointer',
+                  background: hlPeriod === k ? 'var(--navy)' : '#fff',
+                  color: hlPeriod === k ? '#fff' : 'var(--gray)',
+                  border: `1px solid ${hlPeriod === k ? 'var(--navy)' : 'var(--border)'}` }}
+                onClick={() => setHlPeriod(k)}>{label}</button>
+            ))}
+          </div>
+          {hlLoading && <div style={{ textAlign:'center', padding:40, color:'var(--gray)', fontSize:13 }}>로딩 중...</div>}
+          {!hlLoading && !hlData && <div style={{ textAlign:'center', padding:40, color:'var(--gray)', fontSize:13 }}>데이터를 불러올 수 없습니다</div>}
+          {!hlLoading && hlData && (
+            <SeoulDailySection
+              guLeaders={hlData.guLeaders || []}
+              sizeFilter={sizeFilter}
+              fmtPrice={fmtPrice}
+              getSizeGroup={getSizeGroup}
+              cutoffStr={dailyCutoffStr}
+            />
+          )}
+        </div>
         );
       })()}
 
