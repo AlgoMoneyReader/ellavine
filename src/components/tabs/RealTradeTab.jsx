@@ -245,79 +245,56 @@ function HlGuSection({ allGuLeaders, sizeFilter, fmtPrice, getSizeGroup, cutoffS
 }
 
 /** 서울 전역 일별 거래현황 섹션 */
-function SeoulDailySection({ guLeaders, sizeFilter, fmtPrice, getSizeGroup, cutoffStr }) {
-  const [open, setOpen] = useState(true);
+function SeoulDailySection({ days, sizeFilter, fmtPrice, getSizeGroup }) {
   const [expandedDate, setExpandedDate] = useState(null);
 
-  // 모든 구의 topTrades 합산 → 기간 필터 → 평형 필터 → 날짜별 그룹
-  const allTrades = useMemo(() => {
-    const list = [];
-    for (const g of (guLeaders || [])) {
-      for (const t of (g.topTrades || [])) {
-        if (t.report_date < cutoffStr) continue;
-        if (sizeFilter !== '전체' && getSizeGroup(t.area) !== sizeFilter) continue;
-        list.push({ ...t, guName: t.guName || g.guName });
-      }
-    }
-    return list;
-  }, [guLeaders, cutoffStr, sizeFilter]);
+  const filteredDays = useMemo(() => {
+    if (!days) return [];
+    return days.map(({ date, trades, count }) => {
+      const filtered = sizeFilter === '전체'
+        ? trades
+        : trades.filter(t => getSizeGroup(t.area) === sizeFilter);
+      return { date, trades: filtered, totalCount: count };
+    }).filter(d => d.trades.length > 0);
+  }, [days, sizeFilter]);
 
-  // 날짜별 그룹 (deal_year/month/day 기준)
-  const dailyGroups = useMemo(() => {
-    const map = {};
-    for (const t of allTrades) {
-      const key = `${t.deal_year}.${String(t.deal_month).replace(/^0+/,'')}.${String(t.deal_day||'').replace(/^0+/,'')}`;
-      if (!map[key]) map[key] = [];
-      map[key].push(t);
-    }
-    return Object.entries(map)
-      .sort(([a],[b]) => b.localeCompare(a))
-      .map(([date, trades]) => ({
-        date,
-        trades: [...trades].sort((a,b) => b.priceNum - a.priceNum),
-      }));
-  }, [allTrades]);
-
-  if (dailyGroups.length === 0) return null;
+  if (filteredDays.length === 0) return (
+    <div style={{ textAlign:'center', padding:'40px 0', color:'var(--gray)', fontSize:13 }}>
+      해당 기간 거래 데이터 없음
+    </div>
+  );
 
   return (
-    <div style={{ background:'#fff', borderRadius:12, border:'1px solid rgba(11,40,73,0.10)', marginBottom:12, overflow:'hidden' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', cursor:'pointer', background:'rgba(11,40,73,0.03)' }}
-           onClick={() => setOpen(o => !o)}>
-        <span style={{ fontWeight:700, fontSize:14, color:'var(--navy)' }}>📅 일별 거래현황</span>
-        <span style={{ fontSize:12, color:'var(--gray)' }}>{open ? '▲' : '▼'} {dailyGroups.length}일</span>
-      </div>
-      {open && (
-        <div style={{ padding:'8px 0' }}>
-          {dailyGroups.map(({ date, trades }) => (
-            <div key={date} style={{ borderBottom:'1px solid rgba(11,40,73,0.06)' }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 16px', cursor:'pointer', background: expandedDate === date ? 'rgba(11,40,73,0.04)' : 'transparent' }}
-                   onClick={() => setExpandedDate(expandedDate === date ? null : date)}>
-                <span style={{ fontWeight:600, fontSize:13, color:'var(--navy)' }}>{date}</span>
-                <span style={{ fontSize:11, color:'var(--gray)' }}>{expandedDate === date ? '▲' : '▼'} {trades.length}건</span>
-              </div>
-              {expandedDate === date && (
-                <div style={{ padding:'4px 12px 8px' }}>
-                  {trades.map((t, i) => {
-                    const pyeong = Math.round(parseFloat(t.area) * 1.35 / 3.3);
-                    return (
-                      <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 4px', borderBottom: i < trades.length-1 ? '1px solid rgba(11,40,73,0.05)' : 'none', gap:8, flexWrap:'wrap' }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', flex:1, minWidth:0 }}>
-                          <span style={{ fontSize:9, padding:'2px 6px', background:'rgba(11,40,73,0.08)', color:'var(--navy)', borderRadius:8, fontWeight:600, whiteSpace:'nowrap' }}>{t.guName}</span>
-                          <span style={{ fontSize:12, fontWeight:600, color:'var(--navy)', minWidth:0 }}>{t.apt_name}</span>
-                          <span style={{ fontSize:10, color:'var(--gray)', whiteSpace:'nowrap' }}>{t.dong} · {pyeong}평 · {t.floor}층</span>
-                          <AptLinks name={t.apt_name} dong={t.dong} />
-                        </div>
-                        <span style={{ fontWeight:700, fontSize:13, color:'var(--navy)', whiteSpace:'nowrap' }}>{fmtPrice(t.priceNum)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+    <div>
+      {filteredDays.map(({ date, trades, totalCount }) => (
+        <div key={date} style={{ background:'#fff', borderRadius:12, border:'1px solid rgba(11,40,73,0.10)', marginBottom:8, overflow:'hidden' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px', cursor:'pointer', background: expandedDate === date ? 'rgba(11,40,73,0.05)' : 'rgba(11,40,73,0.02)' }}
+               onClick={() => setExpandedDate(expandedDate === date ? null : date)}>
+            <span style={{ fontWeight:700, fontSize:13, color:'var(--navy)' }}>{date}</span>
+            <span style={{ fontSize:11, color:'var(--gray)' }}>
+              {expandedDate === date ? '▲' : '▼'} {trades.length}건{sizeFilter !== '전체' ? ` (전체 ${totalCount}건 중)` : ''}
+            </span>
+          </div>
+          {expandedDate === date && (
+            <div style={{ padding:'4px 12px 8px' }}>
+              {trades.map((t, i) => {
+                const pyeong = Math.round(parseFloat(t.area) * 1.35 / 3.3);
+                return (
+                  <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 4px', borderBottom: i < trades.length-1 ? '1px solid rgba(11,40,73,0.05)' : 'none', gap:8, flexWrap:'wrap' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', flex:1, minWidth:0 }}>
+                      <span style={{ fontSize:9, padding:'2px 6px', background:'rgba(11,40,73,0.08)', color:'var(--navy)', borderRadius:8, fontWeight:600, whiteSpace:'nowrap' }}>{t.guName}</span>
+                      <span style={{ fontSize:12, fontWeight:600, color:'var(--navy)', minWidth:0 }}>{t.apt_name}</span>
+                      <span style={{ fontSize:10, color:'var(--gray)', whiteSpace:'nowrap' }}>{t.dong} · {pyeong}평 · {t.floor}층</span>
+                      <AptLinks name={t.apt_name} dong={t.dong} />
+                    </div>
+                    <span style={{ fontWeight:700, fontSize:13, color:'var(--navy)', whiteSpace:'nowrap' }}>{fmtPrice(t.priceNum)}</span>
+                  </div>
+                );
+              })}
             </div>
-          ))}
+          )}
         </div>
-      )}
+      ))}
     </div>
   );
 }
@@ -622,6 +599,10 @@ export default function RealTradeTab() {
   const [hlData, setHlData] = useState(null);
   const [hlLoading, setHlLoading] = useState(false);
   const [hlPeriod, setHlPeriod] = useState('3m'); // 신고가 탭 전용 기간 (기본 90일)
+
+  const [dlData, setDlData] = useState(null);      // 일별 전체 거래 데이터
+  const [dlLoading, setDlLoading] = useState(false);
+  const [dlDays, setDlDays] = useState(30);         // 기간 필터 (30/60/90)
   const [hlSelectedGu, setHlSelectedGu] = useState(null); // 구별 상세 선택
 
   // 서울 구별 일별 추적 캐시 { lawd: { data, ts } }
@@ -733,7 +714,7 @@ export default function RealTradeTab() {
 
   // 서울 신고가 탭 진입 시 데이터 로드
   useEffect(() => {
-    if (subTab !== 'highlights' && subTab !== 'daily') return;
+    if (subTab !== 'highlights') return;
     if (hlData) return;
     setHlLoading(true);
     fetch('/api/seoul-highlights')
@@ -742,6 +723,18 @@ export default function RealTradeTab() {
       .catch(() => setHlData(null))
       .finally(() => setHlLoading(false));
   }, [subTab]);
+
+  // 서울 일별 전체 거래 탭 진입 시 데이터 로드
+  useEffect(() => {
+    if (subTab !== 'daily') return;
+    setDlLoading(true);
+    setDlData(null);
+    fetch(`/api/seoul-daily?days=${dlDays}`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(json => setDlData(json))
+      .catch(() => setDlData(null))
+      .finally(() => setDlLoading(false));
+  }, [subTab, dlDays]);
 
   const SIZE_FILTERS = ['전체', '20평형', '30평형', '40평형', '50평+'];
 
@@ -2224,15 +2217,6 @@ export default function RealTradeTab() {
                       </div>
                     </div>
 
-                    {/* 서울 전역 일별 거래현황 (구/동/단지 포함) */}
-                    <SeoulDailySection
-                      guLeaders={hlData.guLeaders || []}
-                      sizeFilter={sizeFilter}
-                      fmtPrice={fmtPrice}
-                      getSizeGroup={getSizeGroup}
-                      cutoffStr={cutoffStr}
-                    />
-
                     {/* 구별 신고가 건수 — 접기/펼치기 + 클릭 확장 */}
                     <HlGuSection allGuLeaders={hlData.guLeaders || []} sizeFilter={sizeFilter} fmtPrice={fmtPrice} getSizeGroup={getSizeGroup} cutoffStr={cutoffStr} />
                   </>
@@ -2470,10 +2454,6 @@ export default function RealTradeTab() {
 
       {/* ── 📅 서울 일별 거래현황 탭 ── */}
       {subTab === 'daily' && (() => {
-        const dailyPeriodDays = hlPeriod === '1m' ? 30 : hlPeriod === '2m' ? 60 : 90;
-        const dailyCutoff = new Date();
-        dailyCutoff.setDate(dailyCutoff.getDate() - dailyPeriodDays);
-        const dailyCutoffStr = dailyCutoff.toISOString().slice(0, 10);
         return (
         <div>
           {/* 평형 필터 */}
@@ -2486,25 +2466,29 @@ export default function RealTradeTab() {
           </div>
           {/* 기간 필터 */}
           <div style={{ display:'flex', gap:6, marginBottom:12 }}>
-            {[['1m','최근 30일'],['2m','최근 60일'],['3m','최근 90일']].map(([k,label]) => (
-              <button key={k}
+            {[[30,'최근 30일'],[60,'최근 60일'],[90,'최근 90일']].map(([d,label]) => (
+              <button key={d}
                 style={{ padding:'5px 12px', borderRadius:20, fontSize:11, fontWeight:600, cursor:'pointer',
-                  background: hlPeriod === k ? 'var(--navy)' : '#fff',
-                  color: hlPeriod === k ? '#fff' : 'var(--gray)',
-                  border: `1px solid ${hlPeriod === k ? 'var(--navy)' : 'var(--border)'}` }}
-                onClick={() => setHlPeriod(k)}>{label}</button>
+                  background: dlDays === d ? 'var(--navy)' : '#fff',
+                  color: dlDays === d ? '#fff' : 'var(--gray)',
+                  border: `1px solid ${dlDays === d ? 'var(--navy)' : 'var(--border)'}` }}
+                onClick={() => setDlDays(d)}>{label}</button>
             ))}
           </div>
-          {hlLoading && <div style={{ textAlign:'center', padding:40, color:'var(--gray)', fontSize:13 }}>로딩 중...</div>}
-          {!hlLoading && !hlData && <div style={{ textAlign:'center', padding:40, color:'var(--gray)', fontSize:13 }}>데이터를 불러올 수 없습니다</div>}
-          {!hlLoading && hlData && (
-            <SeoulDailySection
-              guLeaders={hlData.guLeaders || []}
-              sizeFilter={sizeFilter}
-              fmtPrice={fmtPrice}
-              getSizeGroup={getSizeGroup}
-              cutoffStr={dailyCutoffStr}
-            />
+          {dlLoading && <div style={{ textAlign:'center', padding:40, color:'var(--gray)', fontSize:13 }}>로딩 중...</div>}
+          {!dlLoading && !dlData && <div style={{ textAlign:'center', padding:40, color:'var(--gray)', fontSize:13 }}>데이터를 불러올 수 없습니다</div>}
+          {!dlLoading && dlData && (
+            <>
+              <div style={{ fontSize:11, color:'var(--gray)', marginBottom:8 }}>
+                총 <strong>{dlData.total?.toLocaleString()}건</strong> · {dlData.days?.length}일 · {dlData.since} 이후
+              </div>
+              <SeoulDailySection
+                days={dlData.days || []}
+                sizeFilter={sizeFilter}
+                fmtPrice={fmtPrice}
+                getSizeGroup={getSizeGroup}
+              />
+            </>
           )}
         </div>
         );
