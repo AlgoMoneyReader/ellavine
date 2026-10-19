@@ -399,8 +399,8 @@ export default function Hero({ onTabSwitch }) {
         <div style={featureSection}>
           <div style={featureSectionHeader}>
             <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:10, letterSpacing:3, color:'var(--gold)', textTransform:'uppercase', marginBottom:4 }}>FEATURES</div>
-            <div style={{ fontFamily:"'Noto Serif KR',serif", fontSize:16, fontWeight:600, color:'var(--navy)' }}>입주 도우미 기능</div>
-            <div style={{ fontSize:11, color:'var(--text-2)', marginTop:4 }}>입주 전 알아야 할 모든 정보를 담았습니다</div>
+            <div style={{ fontFamily:"'Noto Serif KR',serif", fontSize:16, fontWeight:600, color:'var(--navy)' }}>EL RAVINE Living</div>
+            <div style={{ fontSize:11, color:'var(--text-2)', marginTop:4 }}>새로운 시작을 위한 모든 정보</div>
           </div>
 
           {/* 2열 그리드 */}

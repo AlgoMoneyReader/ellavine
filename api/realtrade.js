@@ -52,17 +52,24 @@ export default async function handler(req, res) {
                 || getTag(block, 'mhouseNm').trim()  // 분양권 단지명
                 || getTag(block, 'srgbCdNm').trim(); // fallback
 
+      // 신고일: rgstDate = "YYYYMMDD" 형식
+      const rgstRaw = getTag(block, 'rgstDate').trim();
+      const reportDate = rgstRaw.length === 8
+        ? `${rgstRaw.slice(0,4)}-${rgstRaw.slice(4,6)}-${rgstRaw.slice(6,8)}`
+        : '';
+
       items.push({
-        price:     getTag(block, 'dealAmount').replace(/,/g, '').replace(/\s/g, ''),
-        area:      getTag(block, 'excluUseAr'),
-        floor:     getTag(block, 'floor'),
-        year:      getTag(block, 'dealYear'),
-        month:     getTag(block, 'dealMonth').padStart(2, '0'),
-        day:       getTag(block, 'dealDay').padStart(2, '0'),
+        price:       getTag(block, 'dealAmount').replace(/,/g, '').replace(/\s/g, ''),
+        area:        getTag(block, 'excluUseAr'),
+        floor:       getTag(block, 'floor'),
+        year:        getTag(block, 'dealYear'),
+        month:       getTag(block, 'dealMonth').padStart(2, '0'),
+        day:         getTag(block, 'dealDay').padStart(2, '0'),
+        report_date: reportDate,
         name,
-        dong:      getTag(block, 'umdNm').trim(),
-        buildYear: getTag(block, 'buildYear'),
-        tradeType: getTag(block, 'dealingGbn') || '매매',
+        dong:        getTag(block, 'umdNm').trim(),
+        buildYear:   getTag(block, 'buildYear'),
+        tradeType:   getTag(block, 'dealingGbn') || '매매',
       });
     }
     return items.filter(it => it.name && it.price);
@@ -145,16 +152,17 @@ export default async function handler(req, res) {
 
       if (rows && rows.length > 0) {
         const toItem = r => ({
-          price:     r.price,
-          area:      r.area,
-          floor:     r.floor,
-          year:      r.deal_year,
-          month:     r.deal_month,
-          day:       r.deal_day,
-          name:      r.apt_name,
-          dong:      r.dong,
-          buildYear: '',
-          tradeType: r.trade_type || '매매',
+          price:       r.price,
+          area:        r.area,
+          floor:       r.floor,
+          year:        r.deal_year,
+          month:       r.deal_month,
+          day:         r.deal_day,
+          report_date: r.report_date || '',
+          name:        r.apt_name,
+          dong:        r.dong,
+          buildYear:   '',
+          tradeType:   r.trade_type || '매매',
         });
 
         const allItems = rows.map(toItem);

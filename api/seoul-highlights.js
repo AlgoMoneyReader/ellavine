@@ -173,33 +173,47 @@ export default async function handler(req, res) {
   // 가나다순 정렬
   guLeaders.sort((a, b) => a.guName.localeCompare(b.guName, 'ko'));
 
-  // ── 2. 서울 전역 일별 전체 거래 (계약일 기준) ─────────────────────
+  // ── 2. 서울 전역 일별 전체 거래 ─────────────────────────────────────
   const allTradesFlat = dedupTrades(guResults.flatMap(({ trades }) => trades));
-  const dayMap = {};
-  for (const t of allTradesFlat) {
-    if (!t.deal_year || !t.deal_month || !t.deal_day) continue;
-    const y = t.deal_year;
+
+  const buildDayMap = (keyFn) => {
+    const map = {};
+    for (const t of allTradesFlat) {
+      const key = keyFn(t);
+      if (!key) continue;
+      if (!map[key]) map[key] = [];
+      map[key].push({
+        apt_name: t.apt_name,
+        priceNum: t.priceNum,
+        area: t.area,
+        floor: t.floor,
+        dong: t.dong,
+        guName: t.guName,
+        lawd_cd: t.lawd_cd,
+      });
+    }
+    return Object.entries(map)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([date, trades]) => ({
+        date,
+        count: trades.length,
+        trades: trades.sort((a, b) => b.priceNum - a.priceNum),
+      }));
+  };
+
+  // 계약일 기준
+  const dailyAll = buildDayMap(t => {
+    if (!t.deal_year || !t.deal_month || !t.deal_day) return null;
     const m = String(parseInt(t.deal_month)).padStart(2, '0');
     const d = String(parseInt(t.deal_day)).padStart(2, '0');
-    const key = `${y}-${m}-${d}`; // YYYY-MM-DD (사전순 = 날짜순)
-    if (!dayMap[key]) dayMap[key] = [];
-    dayMap[key].push({
-      apt_name: t.apt_name,
-      priceNum: t.priceNum,
-      area: t.area,
-      floor: t.floor,
-      dong: t.dong,
-      guName: t.guName,
-      lawd_cd: t.lawd_cd,
-    });
-  }
-  const dailyAll = Object.entries(dayMap)
-    .sort(([a], [b]) => b.localeCompare(a))  // YYYY-MM-DD 형식이므로 사전순 = 날짜 내림차순
-    .map(([date, trades]) => ({
-      date,  // YYYY-MM-DD
-      count: trades.length,
-      trades: trades.sort((a, b) => b.priceNum - a.priceNum),
-    }));
+    return `${t.deal_year}-${m}-${d}`;
+  });
+
+  // 신고일 기준
+  const dailyByReport = buildDayMap(t => {
+    if (!t.report_date) return null;
+    return t.report_date.slice(0, 10); // YYYY-MM-DD
+  });
 
   // ── 3. 서울 전역 신고가 — 전체 + 평형별 각 TOP 30 ────────────────
   // 전체 raw 거래 (각 구 dedup 후 top 50 합산) → 전체 중복 제거 → 가격순
@@ -222,7 +236,8 @@ export default async function handler(req, res) {
     highPrice,      // 전체 top 30 (전체 필터)
     highBySize,     // 평형별 top 30 { '20평형': [...], '30평형': [...], ... }
     guLeaders,
-    dailyAll,       // 일별 전체 거래 (계약일 기준, 가격 내림차순)
+    dailyAll,        // 일별 전체 거래 (계약일 기준, 가격 내림차순)
+    dailyByReport,   // 일별 전체 거래 (신고일 기준, 가격 내림차순)
     since: sinceStr,
     updatedAt: new Date().toISOString(),
     total: totalCount,

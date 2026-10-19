@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import TradeMapView from '../TradeMapView.jsx';
 
-const CACHE_KEY = 'ellavine_realtrade_v4';
+const CACHE_KEY = 'ellavine_realtrade_v6';
 const CACHE_TTL = 3 * 60 * 60 * 1000; // 3시간
 const GU_CACHE_TTL = 30 * 60 * 1000;  // 구별 캐시 30분
 
@@ -54,6 +54,43 @@ function AptLinks({ name, dong }) {
         style={{ fontSize:8, padding:'2px 5px', borderRadius:4, background:'#03c75a', color:'#fff',
           textDecoration:'none', fontWeight:700, lineHeight:'13px', flexShrink:0, letterSpacing:'-0.3px' }}
       >N부동산</a>
+    </span>
+  );
+}
+
+/** 계약일/신고일 기준 뱃지 + 툴팁 */
+function DateBasisBadge({ type }) {
+  const [show, setShow] = useState(false);
+  const isContract = type === 'contract';
+  const label = isContract ? '📌 계약일 기준' : '📌 신고일 기준';
+  const tooltip = isContract
+    ? '매수자·매도자가 계약서에 서명한 날짜 기준입니다.\n실제 거래 시점을 반영하지만, 신고 전까지는 데이터가 나타나지 않을 수 있습니다.'
+    : '국토부 실거래가 시스템에 신고된 날짜 기준입니다.\n계약 후 최대 30일 내 신고 의무가 있어, 오늘 신고된 거래를 바로 확인할 수 있습니다.';
+  return (
+    <span style={{ position:'relative', display:'inline-flex', alignItems:'center', gap:3 }}>
+      <span style={{
+        fontSize:10, color:'var(--gold)', fontWeight:600, letterSpacing:'-0.2px',
+        background:'rgba(180,140,60,0.08)', border:'1px solid rgba(180,140,60,0.25)',
+        borderRadius:6, padding:'2px 7px', cursor:'default',
+      }}>{label}</span>
+      <span
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        style={{
+          width:14, height:14, borderRadius:'50%', background:'var(--border)',
+          color:'var(--gray)', fontSize:9, fontWeight:700, display:'inline-flex',
+          alignItems:'center', justifyContent:'center', cursor:'default', flexShrink:0,
+        }}
+      >i</span>
+      {show && (
+        <div style={{
+          position:'absolute', top:20, left:0, zIndex:999,
+          background:'#1a1a2e', color:'#e8e8e8', fontSize:11, lineHeight:1.6,
+          padding:'10px 13px', borderRadius:8, width:240,
+          boxShadow:'0 4px 20px rgba(0,0,0,0.35)',
+          whiteSpace:'pre-wrap', pointerEvents:'none',
+        }}>{tooltip}</div>
+      )}
     </span>
   );
 }
@@ -277,13 +314,6 @@ function SeoulDailySection({ days, allDays, sizeFilter, fmtPrice, getSizeGroup }
   const fmtDate = (d) => {
     const [y, m, day] = d.split('-');
     return `${y}.${parseInt(m)}.${parseInt(day)}`;
-  };
-
-  // 단지 클릭 시 해당 구의 guLeaders에서 전체 거래 내역 조회
-  const getAptTrades = (aptName, guName) => {
-    const gl = (guLeaders || []).find(g => g.guName === guName);
-    if (!gl) return [];
-    return (gl.topTrades || []).filter(t => t.apt_name === aptName);
   };
 
   if (filteredDays.length === 0) return (
@@ -614,6 +644,116 @@ function MiniPriceChart({ trades }) {
   );
 }
 
+/** 전일 특이 거래 요약 박스 */
+function YesterdaySummary({ hlData, fmtPrice }) {
+  if (!hlData) return null;
+
+  const dailyRows = hlData.dailyByReport || [];
+  if (!dailyRows.length) return null;
+
+  // 어제 or 가장 최근 날짜 찾기
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const yesterdayStr = (() => { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); })();
+  const sortedRows = [...dailyRows].sort((a,b) => b.date.localeCompare(a.date));
+  // 오늘 제외한 가장 최근 날짜
+  const targetRow = sortedRows.find(r => r.date < todayStr);
+  if (!targetRow || !targetRow.trades?.length) return null;
+
+  const { date, trades } = targetRow;
+
+  // 단지별 역대 최고가 맵 구성 (target date 제외한 모든 거래에서)
+  const aptMaxMap = {}; // key: apt_name__guName → max priceNum (target date 제외)
+  for (const row of dailyRows) {
+    if (row.date === date) continue; // 당일 제외
+    for (const t of (row.trades || [])) {
+      const key = `${t.apt_name}__${t.guName}`;
+      if (!aptMaxMap[key] || t.priceNum > aptMaxMap[key]) aptMaxMap[key] = t.priceNum;
+    }
+  }
+
+  // target date 거래 중 신고가(단지 역대 최고 경신)만 추출
+  const recordTrades = trades
+    .map(t => {
+      const key = `${t.apt_name}__${t.guName}`;
+      const prevMax = aptMaxMap[key] || 0;
+      const isRecord = t.priceNum > prevMax && prevMax > 0; // 이전 거래 있어야 비교 가능
+      const diff = prevMax > 0 ? t.priceNum - prevMax : null;
+      return { ...t, prevMax, diff, isRecord };
+    })
+    .filter(t => t.isRecord)
+    .sort((a,b) => b.priceNum - a.priceNum);
+
+  if (recordTrades.length === 0) return null;
+
+  const [y, m, d] = date.split('-');
+  const dateLabel = `${y}.${parseInt(m)}.${parseInt(d)}`;
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, #0B2849 0%, #122f57 100%)',
+      border: '1px solid rgba(200,168,64,0.35)',
+      borderRadius: 14,
+      padding: '14px 16px',
+      marginBottom: 14,
+      boxShadow: '0 4px 16px rgba(11,40,73,0.18)',
+    }}>
+      {/* 헤더 */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ fontSize:13, fontWeight:800, color:'#C8A840', letterSpacing:'-0.3px' }}>
+            🏆 {date === yesterdayStr ? '전일' : dateLabel} 신고가
+          </span>
+          <span style={{ fontSize:10, color:'rgba(255,255,255,0.55)' }}>
+            {dateLabel} · 신고일 기준
+          </span>
+        </div>
+        <span style={{ fontSize:10, color:'#C8A840', background:'rgba(200,168,64,0.15)', border:'1px solid rgba(200,168,64,0.3)', padding:'2px 8px', borderRadius:8, fontWeight:700 }}>
+          {recordTrades.length}건 경신
+        </span>
+      </div>
+
+      {/* 신고가 목록 */}
+      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+        {recordTrades.map((t, i) => {
+          const area = parseFloat(t.area) || 0;
+          const py = Math.round(area / 3.3);
+          return (
+            <div key={i} style={{
+              display:'flex', alignItems:'center', justifyContent:'space-between',
+              background:'rgba(200,168,64,0.08)', border:'1px solid rgba(200,168,64,0.25)',
+              borderRadius:10, padding:'8px 12px', gap:8,
+            }}>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:5, flexWrap:'wrap', marginBottom:2 }}>
+                  <span style={{ fontSize:9, color:'rgba(255,255,255,0.5)', background:'rgba(255,255,255,0.08)', padding:'1px 6px', borderRadius:6, whiteSpace:'nowrap' }}>
+                    {t.guName}
+                  </span>
+                  <span style={{ fontSize:12, fontWeight:700, color:'#e8e8f0', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {t.apt_name}
+                  </span>
+                </div>
+                <div style={{ fontSize:10, color:'rgba(255,255,255,0.45)' }}>
+                  {t.dong && `${t.dong} · `}{py > 0 ? `${py}평` : ''}{area > 0 ? `(${area}㎡)` : ''}{t.floor ? ` · ${t.floor}층` : ''}
+                </div>
+              </div>
+              <div style={{ textAlign:'right', flexShrink:0 }}>
+                <div style={{ fontSize:14, fontWeight:800, color:'#C8A840', whiteSpace:'nowrap' }}>
+                  {fmtPrice(t.priceNum)}
+                </div>
+                {t.diff !== null && (
+                  <div style={{ fontSize:9, color:'rgba(200,168,64,0.75)', fontWeight:600, whiteSpace:'nowrap' }}>
+                    이전 {fmtPrice(t.prevMax)} 대비 +{fmtPrice(t.diff)}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function RealTradeTab() {
   const [data, setData] = useState(null);
   const [subTab, setSubTab] = useState('apt');
@@ -627,6 +767,8 @@ export default function RealTradeTab() {
   const [currentPage, setCurrentPage] = useState(1);
   const [complexPeriod, setComplexPeriod] = useState('1w');
   const [dailyOpen, setDailyOpen] = useState(false);
+  const [dailyBarExpanded, setDailyBarExpanded] = useState(null); // 일별 바차트 날짜 펼침
+  const [dailyBasis, setDailyBasis] = useState('contract'); // 'contract'=계약일 | 'report'=신고일
   const [complexOpen, setComplexOpen] = useState(false);
   const [complexExpanded, setComplexExpanded] = useState(null); // 단지명 또는 null
   const [trackDayExpanded, setTrackDayExpanded] = useState(null);    // 강서구 탭 날짜 확장
@@ -861,16 +1003,27 @@ export default function RealTradeTab() {
   const thisMonthHigh = [...thisMonthTrades].sort((a,b) => (parseInt(b.price)||0) - (parseInt(a.price)||0))[0] || null;
 
   // 일별 실거래 신고건수 (최근 30일, 평형 필터 적용)
-  const dailyMap = {};
+  const dailyMapContract = {};
+  const dailyMapReport = {};
   filteredAllTrades.forEach(t => {
-    if (!t.day) return;
-    const key = `${t.year}.${t.month}.${t.day}`;
-    dailyMap[key] = (dailyMap[key] || 0) + 1;
+    if (t.day) {
+      const key = `${t.year}.${t.month}.${t.day}`;
+      if (!dailyMapContract[key]) dailyMapContract[key] = [];
+      dailyMapContract[key].push(t);
+    }
+    if (t.report_date) {
+      const rd = t.report_date.slice(0, 10); // YYYY-MM-DD
+      const [y, m, d] = rd.split('-');
+      const key = `${y}.${parseInt(m)}.${parseInt(d)}`;
+      if (!dailyMapReport[key]) dailyMapReport[key] = [];
+      dailyMapReport[key].push(t);
+    }
   });
+  const dailyMap = dailyBasis === 'report' ? dailyMapReport : dailyMapContract;
   const dailyCounts = Object.entries(dailyMap)
     .sort((a,b) => b[0].localeCompare(a[0]))
     .slice(0, 30);
-  const maxDaily = Math.max(...dailyCounts.map(([,c]) => c), 1);
+  const maxDaily = Math.max(...dailyCounts.map(([,ts]) => ts.length), 1);
 
   // 단지별 신고건수 (기간 필터 + 평형 필터 적용)
   const COMPLEX_PERIODS = [
@@ -1020,6 +1173,9 @@ export default function RealTradeTab() {
         </button>
       </div>
 
+      {/* ── 전일 하이라이트 요약 ── */}
+      <YesterdaySummary hlData={hlData} fmtPrice={fmtPrice} />
+
       {/* ── 서울 구별 비교 탭 ── */}
       {subTab === 'seoul' && (() => {
         const seoulData   = selectedGuCode === '11500' ? data : guDataCache[selectedGuCode]?.data;
@@ -1050,6 +1206,9 @@ export default function RealTradeTab() {
 
         return (
           <>
+            {/* 기준 뱃지 */}
+            <div style={{ marginBottom:10 }}><DateBasisBadge type="contract" /></div>
+
             {/* 구 선택 드롭박스 */}
             <div style={{ marginBottom:14 }}>
               <div style={{ fontSize:10, color:'var(--gray)', marginBottom:6, fontWeight:600 }}>🏙️ 구 선택 (서울 25개 구)</div>
@@ -1739,13 +1898,27 @@ export default function RealTradeTab() {
             style={{ ...dailySectionTitle, marginBottom: dailyOpen ? 10 : 0, cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center' }}
             onClick={() => setDailyOpen(o => !o)}
           >
-            <span>
-              📊 일별 실거래 신고건수
-              <span style={{ fontSize:10, color:'var(--gray)', fontWeight:400, marginLeft:6 }}>
-                최근 {dailyCounts.length}일 · {sizeFilter !== '전체' ? `${sizeFilter} · ` : ''}국토교통부 신고 기준
+            <span style={{ display:'flex', alignItems:'center', gap:6, flex:1 }}>
+              <span onClick={() => setDailyOpen(o => !o)} style={{ display:'flex', alignItems:'center', gap:4, flex:1 }}>
+                📊 일별 실거래 신고건수
+                <span style={{ fontSize:10, color:'var(--gray)', fontWeight:400, marginLeft:4 }}>
+                  최근 {dailyCounts.length}일{sizeFilter !== '전체' ? ` · ${sizeFilter}` : ''}
+                </span>
+              </span>
+              {/* 계약일/신고일 토글 */}
+              <span onClick={e => e.stopPropagation()} style={{ display:'flex', gap:3 }}>
+                {[['contract','계약일'],['report','신고일']].map(([k,label]) => (
+                  <button key={k}
+                    onClick={() => { setDailyBasis(k); setDailyBarExpanded(null); }}
+                    style={{ fontSize:9, padding:'2px 7px', borderRadius:8, cursor:'pointer', fontWeight:600,
+                      border: dailyBasis === k ? '1px solid var(--navy)' : '1px solid var(--border)',
+                      background: dailyBasis === k ? 'var(--navy)' : '#fff',
+                      color: dailyBasis === k ? '#fff' : 'var(--gray)' }}
+                  >{label}</button>
+                ))}
               </span>
             </span>
-            <span style={{ fontSize:11, color:'var(--gray)' }}>{dailyOpen ? '▲' : '▼'}</span>
+            <span style={{ fontSize:11, color:'var(--gray)', marginLeft:4 }} onClick={() => setDailyOpen(o => !o)}>{dailyOpen ? '▲' : '▼'}</span>
           </div>
           {dailyOpen && (
             <>
@@ -1753,19 +1926,52 @@ export default function RealTradeTab() {
                 매수자가 계약 후 30일 이내 국토부에 신고한 건수입니다. 토지거래허가구역은 허가 후 신고 포함.
               </div>
               <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-                {dailyCounts.map(([date, count]) => (
-                  <div key={date} style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    <span style={{ fontSize:9, color:'var(--gray)', width:60, flexShrink:0 }}>{date.slice(5)}</span>
-                    <div style={{ flex:1, background:'var(--bg)', borderRadius:3, height:12, overflow:'hidden', border:'1px solid var(--border)' }}>
-                      <div style={{
-                        width:`${Math.round((count/maxDaily)*100)}%`,
-                        background: count === maxDaily ? 'var(--red)' : 'var(--navy)',
-                        height:'100%', borderRadius:3, transition:'width 0.3s',
-                      }} />
+                {dailyCounts.map(([date, trades]) => {
+                  const count = trades.length;
+                  const isExp = dailyBarExpanded === date;
+                  const sortedTrades = [...trades].sort((a,b) => (parseInt(b.price)||0) - (parseInt(a.price)||0));
+                  return (
+                    <div key={date}>
+                      <div
+                        style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', borderRadius:4,
+                          padding:'2px 0', background: isExp ? 'rgba(180,140,60,0.06)' : 'transparent' }}
+                        onClick={() => setDailyBarExpanded(isExp ? null : date)}
+                      >
+                        <span style={{ fontSize:9, color: isExp ? 'var(--gold)' : 'var(--gray)', width:60, flexShrink:0, fontWeight: isExp ? 700 : 400 }}>
+                          {date.slice(5)}
+                        </span>
+                        <div style={{ flex:1, background:'var(--bg)', borderRadius:3, height:12, overflow:'hidden', border:'1px solid var(--border)' }}>
+                          <div style={{
+                            width:`${Math.round((count/maxDaily)*100)}%`,
+                            background: count === maxDaily ? 'var(--red)' : isExp ? 'var(--gold)' : 'var(--navy)',
+                            height:'100%', borderRadius:3, transition:'width 0.3s',
+                          }} />
+                        </div>
+                        <span style={{ fontSize:10, fontWeight:700, color: count === maxDaily ? 'var(--red)' : 'var(--text)', width:22, textAlign:'right' }}>{count}</span>
+                        <span style={{ fontSize:9, color:'var(--gray)', width:10 }}>{isExp ? '▲' : '▼'}</span>
+                      </div>
+                      {isExp && (
+                        <div style={{ marginLeft:66, marginTop:4, marginBottom:6, display:'flex', flexDirection:'column', gap:3 }}>
+                          {sortedTrades.map((t, i) => (
+                            <div key={i} style={{ fontSize:11, padding:'5px 8px', borderRadius:6,
+                              background:'#fff', border:'1px solid var(--border)', lineHeight:1.5 }}>
+                              <div style={{ display:'flex', alignItems:'center', gap:4, flexWrap:'wrap' }}>
+                                <span style={{ fontWeight:700, color:'var(--navy)' }}>{t.name}</span>
+                                <AptLinks name={t.name} dong={t.dong} />
+                              </div>
+                              <div style={{ fontSize:10, color:'var(--gray)', marginTop:2 }}>
+                                {t.dong} · {t.area}㎡ · {t.floor}층
+                                <span style={{ marginLeft:8, fontWeight:700, color:'var(--red)' }}>
+                                  {formatPrice(t.price)}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <span style={{ fontSize:10, fontWeight:700, color: count === maxDaily ? 'var(--red)' : 'var(--text)', width:22, textAlign:'right' }}>{count}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
@@ -2179,6 +2385,9 @@ export default function RealTradeTab() {
 
         return (
           <>
+            {/* 기준 뱃지 */}
+            <div style={{ marginBottom:10 }}><DateBasisBadge type="contract" /></div>
+
             {/* ── 필터 행 ── */}
             <div style={{ display:'flex', gap:6, marginBottom:10, flexWrap:'wrap' }}>
               {/* 평형 */}
@@ -2505,6 +2714,22 @@ export default function RealTradeTab() {
       {subTab === 'daily' && (() => {
         return (
         <div>
+          {/* 기준 뱃지 + 계약일/신고일 토글 */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+            <DateBasisBadge type={dailyBasis} />
+            <div style={{ display:'flex', gap:4 }}>
+              {[['contract','계약일'],['report','신고일']].map(([k,label]) => (
+                <button key={k}
+                  onClick={() => setDailyBasis(k)}
+                  style={{ fontSize:10, padding:'4px 10px', borderRadius:8, cursor:'pointer', fontWeight:600,
+                    border: dailyBasis === k ? '1px solid var(--navy)' : '1px solid var(--border)',
+                    background: dailyBasis === k ? 'var(--navy)' : '#fff',
+                    color: dailyBasis === k ? '#fff' : 'var(--gray)' }}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+
           {/* 평형 필터 */}
           <div style={sizeFilterRow}>
             {SIZE_FILTERS.map(f => (
@@ -2530,8 +2755,11 @@ export default function RealTradeTab() {
             const dlDays2 = hlPeriod === '1m' ? 30 : hlPeriod === '2m' ? 60 : 90;
             const dlCutoff = new Date(); dlCutoff.setDate(dlCutoff.getDate() - dlDays2);
             const dlCutoffStr = dlCutoff.toISOString().slice(0, 10);
-            // YYYY-MM-DD 형식이므로 문자열 비교로 충분
-            const filteredDays = (hlData.dailyAll || []).filter(({ date }) => date >= dlCutoffStr);
+            // 계약일/신고일 기준 선택
+            const baseDays = dailyBasis === 'contract'
+              ? (hlData.dailyAll || hlData.dailyByReport || [])
+              : (hlData.dailyByReport || hlData.dailyAll || []);
+            const filteredDays = baseDays.filter(({ date }) => date >= dlCutoffStr);
             const totalFiltered = filteredDays.reduce((s, d) => s + d.count, 0);
             return (
               <>
@@ -2540,7 +2768,7 @@ export default function RealTradeTab() {
                 </div>
                 <SeoulDailySection
                   days={filteredDays}
-                  allDays={hlData.dailyAll || []}
+                  allDays={baseDays}
                   sizeFilter={sizeFilter}
                   fmtPrice={fmtPrice}
                   getSizeGroup={getSizeGroup}
