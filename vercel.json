@@ -9,10 +9,6 @@
     {
       "path": "/api/cron-push",
       "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/keep-alive",
-      "schedule": "0 12 * * *"
     }
   ]
 }
